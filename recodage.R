@@ -1,28 +1,57 @@
-doc_quest <- read_csv("~/Documents/M1_R/Memoire/data.csv")
+#Les données proviennent d'un questionnaire que j'ai fait passer par internet à des libraires 
+#généralistes indépendants. Dans certains cas, j'ai fait passer le questionnaire par voie téléphonique,
+#et parfois j'ai contacté directement des libraires afin de discuter de leurs réponses au questionnaire.
+#Mon coeur de cible était les gérants des librairies, et il s'avère que la passation par Internet 
+#n'était clairement pas le meilleur moyen d'y arriver, d'ailleurs au téléphone, il fallait souvent que 
+#je demande expréssement à parler à la gérante car j'avais souvent une salariée au téléphone. 
+#De fait, j'ai exclu les variables socio-démographiques et je n'ai gardé que les variables concernant 
+#l'entreprise. Pour une future enquête, j'aurais des erreurs à ne pas commettre à nouveau.
+
+doc_quest <- read.csv("https://minio.lab.sspcloud.fr/juleslapeuf/data.csv")
+
+generate_code <- function() {
+  digits_part1 <- stri_rand_strings(1, 2, "[0-9]")
+  letters <- stri_rand_strings(1, 2, "[A-Z]")
+  digits_part2 <- stri_rand_strings(1, 2, "[0-9]")
+  return(paste0(digits_part1, letters, digits_part2))
+}
+
+doc_quest <- doc_quest %>%
+  mutate(code = sapply(1:nrow(doc_quest), function(x) generate_code()))
+
+#J'ai pu contacté les librairies généralistes indépendantes par mail grâce à une liste de mails 
+#récupérée auprès d'un professionnel de la chaîne du livre, et à partir de là j'ai ciblé les librairies 
+#généralistes indépendantes, en faisant attention de n'avoir que des librairies dont l'activité 
+#principale était la vente de livres. Même après sélection des adresses mail, il me restait encore des 
+#oublis, d'où le filtre sur le type de librairie.
 
 donnees_preparees <- doc_quest %>%
-  rename(annee_naiss = 'Quelle est votre année de naissance ? (AAAA)',
-         codepostal = 'Quel est le code postal de la commune de votre librairie ?',
-         annee_install = 'En quelle année vous êtes-vous installé dans votre librairie ? (AAAA)',
-         sal_tpl = 'Combien y a-t-il d’employés à temps plein ? (en chiffre)',
-         sal_tpa = 'Combien y a-t-il d’employés à temps partiel ? (en chiffre)',
-         taille = 'Quelle est la surface commerciale de votre librairie ? (en m²)',
-         ca = 'Quel était le chiffre d’affaires de la librairie l’année dernière ? (en euro)',
-         type = 'Votre librairie est-elle... ?',
-         une_fois = 'Lesquels de ces outils utilisez-vous au moins 1 fois par semaine ?',
-         jamais = "Lesquels de ces outils n'avez-vous jamais utilisé au travail ?",
-         chiffre_pre = 'Au moment où vous répondez à ce questionnaire, avez-vous en tête un chiffre précis de... ?',
-         inq_av = 'Sur une échelle de 1 à 10, avant la pandémie, étiez-vous inquiet pour l’avenir de votre commerce ?',
-         inq_p = 'Sur une échelle de 1 à 10, en plein cœur de la pandémie (avril 2020), étiez-vous inquiet pour l’avenir de votre commerce ?',
-         inq_ap = 'Sur une échelle de 1 à 10, êtes-vous inquiet pour l’avenir de votre commerce ?',
-         inq_source = 'Quelle est votre principale source d’inquiétude ?',
-         outils_inf = 'Avez-vous recours plus souvent à des outils informatiques et/ou numériques depuis la fin de la pandémie ?',
-         logspe_panne = 'Votre librairie pourrait-elle fonctionner comme d’habitude si votre logiciel spécialisé tombait en panne ?',
-         diff_eco = 'Rencontrez-vous des difficultés économiques ?') %>%
-  select(2:19)
+  rename(annee_naiss = 'Quelle.est.votre.année.de.naissance....AAAA.',
+         codepostal = 'Quel.est.le.code.postal.de.la.commune.de.votre.librairie..',
+         annee_install = 'En.quelle.année.vous.êtes.vous.installé.dans.votre.librairie....AAAA.',
+         sal_tpl = 'Combien.y.a.t.il.d.employés.à.temps.plein....en.chiffre.',
+         sal_tpa = 'Combien.y.a.t.il.d.employés.à.temps.partiel....en.chiffre.',
+         taille = 'Quelle.est.la.surface.commerciale.de.votre.librairie....en.m...',
+         ca = 'Quel.était.le.chiffre.d.affaires.de.la.librairie.l.année.dernière....en.euro.',
+         type = 'Votre.librairie.est.elle.....',
+         une_fois = 'Lesquels.de.ces.outils.utilisez.vous.au.moins.1.fois.par.semaine..',
+         jamais = "Lesquels.de.ces.outils.n.avez.vous.jamais.utilisé.au.travail...",
+         chiffre_pre = 'Au.moment.où.vous.répondez.à.ce.questionnaire..avez.vous.en.tête.un.chiffre.précis.de.....',
+         inq_av = 'Sur.une.échelle.de.1.à.10..avant.la.pandémie..étiez.vous.inquiet.pour.l.avenir.de.votre.commerce....',
+         inq_p = 'Sur.une.échelle.de.1.à.10..en.plein.cœur.de.la.pandémie..avril.2020...étiez.vous.inquiet.pour.l.avenir.de.votre.commerce....',
+         inq_ap = 'Sur.une.échelle.de.1.à.10..êtes.vous.inquiet.pour.l.avenir.de.votre.commerce....',
+         inq_source = 'Quelle.est.votre.principale.source.d.inquiétude..',
+         outils_inf = 'Avez.vous.recours.plus.souvent.à.des.outils.informatiques.et.ou.numériques.depuis.la.fin.de.la.pandémie..',
+         logspe_panne = 'Votre.librairie.pourrait.elle.fonctionner.comme.d.habitude.si.votre.logiciel.spécialisé.tombait.en.panne...',
+         diff_eco = 'Rencontrez.vous.des.difficultés.économiques...') %>%
+  select(2:20)
 
 donnees_preparees <- donnees_preparees %>%
   filter(type == "Généraliste")
+
+#Maintenant, on passe au recodage à la main de certaines réponses. Soit pour harmoniser les modalités 
+#(quand il y a un espace au milieu d'un nombre à 6 chiffres, quand le signe € était ajouté, ou un "." 
+#ou un "k", "HT"...)...
 
 #Année de naissance
 donnees_preparees <- donnees_preparees %>%
@@ -41,7 +70,6 @@ donnees_preparees <- donnees_preparees %>%
     annee_naiss == 'Grain de lire' ~ NA_character_,
     TRUE ~ as.character(annee_naiss)
   ))
-
 
 #Code postal
 donnees_preparees <- donnees_preparees %>%
@@ -87,6 +115,7 @@ donnees_preparees[300, 5] <- "0"
 
 #Nombre de salariés à temps plein
 donnees_preparees$sal_tpl_rec <- donnees_preparees$sal_tpl %>%
+  as.factor() %>%
   fct_recode(
     "0" = "0.85",
     "1" = "1 + gérante",
@@ -105,6 +134,7 @@ donnees_preparees$sal_tpl_rec <- donnees_preparees$sal_tpl %>%
 
 #Nombre de salariés à temps partiel
 donnees_preparees$sal_tpa_rec <- donnees_preparees$sal_tpa %>%
+  as.factor() %>%
   fct_recode(
     "1" = "0,5",
     "1" = "1 (fin d'année)",
@@ -127,6 +157,7 @@ donnees_preparees[304, 7] <- "200000"
 
 #Chiffre d'affaires
 donnees_preparees$ca_rec <- donnees_preparees$ca %>%
+  as.factor() %>%
   fct_recode(
     NULL = "0",
     "1000000" = "1 000 000",
@@ -324,11 +355,19 @@ donnees_preparees <- donnees_preparees %>%
 
 #Difficultés économiques éprouvées
 donnees_preparees$diff_eco_rec <- donnees_preparees$diff_eco %>%
+  as.factor() %>%
   fct_recode(
     "1" = "Non",
     "0" = "Oui"
   ) %>%
   as.numeric()
+
+
+#J'ai des messages type warning, mais quand je vérifie les modalités non prises en compte ont quand 
+#même été recodées, donc il y a quelque chose à creuser à ce niveau-là.
+
+#... , soit pour catégoriser (notamment le nombre de salariés). Catégorisation qui a tout d'arbitraire,
+#mais qui a été réalisée à l'aide de la fonction fct_recode et la fenêtre pop-up très pratique.
 
 ###CATEGORISATION
 
@@ -530,7 +569,7 @@ donnees_preparees <- donnees_preparees %>%
     postcode_clear_numeric == 9270 ~ "09",
     TRUE ~ str_sub(as.character(postcode_clear_numeric), start = 1L, end = 2L)
   ))
-departements_region <- read_csv("~/Documents/departements-region.csv")
+departements_region <- read_csv("https://minio.lab.sspcloud.fr/juleslapeuf/departements-region.csv")
 
 donnees_preparees <- left_join(donnees_preparees, departements_region, by = c("code_dpt" = "num_dep"))
 
@@ -639,9 +678,10 @@ donnees_preparees <- donnees_preparees %>%
     taille_reco < 100  ~ "Moins de 100 m2"
   ),
   taille_reco_rec = fct_relevel(taille_reco_rec,
-                                 "Moins de 100 m2",
-                                 "Entre 100 et 199 m2",
-                                 "Plus de 200 m2"))
+                                "Moins de 100 m2",
+                                "Entre 100 et 199 m2",
+                                "Plus de 200 m2"))
+#Je calcule un indicateur (rentabilité au m2) ainsi que des corrélations entre variables.
 
 #Rentabilité au m2
 donnees_preparees <- donnees_preparees %>%

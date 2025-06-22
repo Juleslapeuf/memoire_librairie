@@ -1,9 +1,10 @@
 #CAH
 
-d <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "surfco_", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule")]
+d <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "taille_reco_rec", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule")]
 d <- mutate_all(d, as.factor)
 d <- na.omit(d)
 
+names(donnees_preparees)
 # Classification Ascendante Hiérarchique (CAH) ----
 
 distance <- daisy(d, metric = "euclidean")

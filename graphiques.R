@@ -1,10 +1,15 @@
-pdml <- read_excel("Documents/parts de marché du livre.xlsx")
+source("/home/onyxia/work/memoire_librairie/recodage.R")
 
-pourcent <- pdml %>%
-  mutate_at(c("autres", "gs non spe", "gs spe", "interne", "libraire", "VPC, club, courtage"), ~. *100) %>%
-  rename(gsnonspe = 'gs non spe',
-         gsspe = 'gs spe',
-         VPC = "VPC, club, courtage")
+# Parts du marché du livre
+pourcent <- data.frame(
+  années = c(2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022),
+  autres = c(4.0, 4.0, 3.5, 3.5, 3.8, 3.8, 3.9, 4.1, 4.6, 4.7, 5.4),
+  gsnonspe = c(19.5, 19.5, 19.5, 19.5, 19.2, 19.2, 19.4, 18.5, 16.7, 18.3, 18.7),
+  gsspe = c(22.5, 22.0, 22.0, 24.0, 24.5, 25.3, 25.6, 26.9, 28.6, 27.9, 27.7),
+  interne = c(17.0, 18.0, 18.5, 19.0, 19.5, 20.3, 20.8, 20.9, 21.9, 20.0, 21.9),
+  librairie = c(22.0, 21.5, 22.0, 22.0, 22.1, 21.9, 21.8, 22.2, 22.5, 23.4, 22.9),
+  VPC = c(15.0, 15.0, 14.5, 12.0, 10.8, 9.4, 8.6, 7.3, 5.7, 5.7, 3.2)
+)
 
 pourcent_long <- pivot_longer(pourcent, -années, names_to = "variable", values_to = "pourcentage")
 pourcent_long$années <- as.integer(pourcent_long$années)
@@ -36,10 +41,11 @@ ggplot(pourcent_long, aes(x = années, y = pourcentage, color = variable)) +
   scale_color_discrete(name = NULL, labels = c("Autres", "Grandes surfaces spécialisées culture", "Librairies indépendantes", "Grandes surfaces non spécialisées", "Internet", "Vente par correspondance, club, courtage")) +  
   theme_minimal() +
   theme(
-    panel.grid.major = element_blank(),  # Suppression des lignes de grille
-    panel.grid.minor = element_blank(), 
-    panel.border = element_rect(linetype = "none", fill = NA),
-    legend.position = "bottom"  # Position de la légende
+    panel.grid.major = element_blank(),  # Supprime les lignes de grille majeures
+    panel.grid.minor = element_blank(),  # Supprime les lignes de grille mineures
+    panel.border = element_blank(),      # Supprime la bordure du panneau
+    legend.position = "bottom",          # Positionne la légende en bas
+    plot.title = element_text(hjust = 0.5) # Centre le titre du graphique
   ) +
   scale_x_continuous(breaks = unique(pourcent_long$années)) + # Afficher toutes les années sur l'axe 
   ggtitle("Lieux d'achats de livres imprimés en France") +  # Ajout du titre
@@ -47,9 +53,9 @@ ggplot(pourcent_long, aes(x = années, y = pourcentage, color = variable)) +
 
 #Format des livres vendus en France en valeur auprès des particuliers
 années <- c(seq(2011, 2022, by = 1))
-livre_neufv <- c(95.2, 92.8, 92.6, 91.9, 91.3, 90.8, 90.3, 89.9, 89.5, 88.2, 88.0, 88.9)
-livre_ocassv <- c(3.7, 5.4, 5.5, 5.9, 6.1, 6.3, 6.4, 6.7, 6.8, 7.5, 7.9, 7.2)
-livre_numv <- c(1.0, 1.8, 1.9, 2.3, 2.7, 2.9, 3.2, 3.5, 3.7, 4.3, 4.1, 3.9)
+livre_neuf <- c(95.2, 92.8, 92.6, 91.9, 91.3, 90.8, 90.3, 89.9, 89.5, 88.2, 88.0, 88.9)
+livre_ocass <- c(3.7, 5.4, 5.5, 5.9, 6.1, 6.3, 6.4, 6.7, 6.8, 7.5, 7.9, 7.2)
+livre_num <- c(1.0, 1.8, 1.9, 2.3, 2.7, 2.9, 3.2, 3.5, 3.7, 4.3, 4.1, 3.9)
 livres_vendus_valeur <- data.frame(années, livre_neuf, livre_num, livre_ocass)
 
 livre_neufvo <- c(86.3, 84.8, 83.9, 83.1, 82.2, 80.8, 80.2, 79.5, 78.9, 78.0, 79.2, 79.0)
@@ -182,7 +188,44 @@ ggplot(data = donnees_preparees, aes(x = taille_reco)) +
   
 
 #Pratiques culturelles : la lecture
-pc <- read_excel("~/Documents/pratiques_lectures.xlsx")
+pc <- data.frame(
+  age = c(
+    "15 - 19 ans", "20 - 24 ans", "25 - 39 ans", "40 - 59 ans", "60 ans et +", "Ensemble",
+    "15 - 19 ans", "20 - 24 ans", "25 - 39 ans", "40 - 59 ans", "60 ans et +", "Ensemble",
+    "15 - 19 ans", "20 - 24 ans", "25 - 39 ans", "40 - 59 ans", "60 ans et +", "Ensemble",
+    "15 - 19 ans", "20 - 24 ans", "25 - 39 ans", "40 - 59 ans", "60 ans et +", "Ensemble",
+    "15 - 19 ans", "20 - 24 ans", "25 - 39 ans", "40 - 59 ans", "60 ans et +", "Ensemble"
+  ),
+  annees = c(
+    1988, 1988, 1988, 1988, 1988, 1988,
+    1997, 1997, 1997, 1997, 1997, 1997,
+    2008, 2008, 2008, 2008, 2008, 2008,
+    2018, 2018, 2018, 2018, 2018, 2018,
+    2018, 2018, 2018, 2018, 2018, 2018
+  ),
+  valeur_un = c(
+    83, 78, 78, 71, 63, 73,
+    80, 80, 73, 71, 63, 73,
+    70, 74, 69, 67, 63, 67,
+    59, 58, 59, 64, 62, 62,
+    59, 58, 59, 64, 62, 62
+  ),
+  valeur_neuf = c(
+    41, 33, 36, 35, 29, 34,
+    43, 46, 38, 37, 33, 37,
+    40, 49, 42, 38, 35, 39,
+    38, 38, 37, 36, 28, 34,
+    38, 38, 37, 36, 28, 34
+  ),
+  valeur_vingt = c(
+    22, 23, 24, 20, 21, 22,
+    18, 16, 19, 19, 17, 18,
+    13, 8, 12, 15, 16, 14,
+    11, 11, 10, 14, 20, 15,
+    11, 11, 10, 14, 20, 15
+  )
+)
+
 pc <- pc %>%
   filter(annees != 1988)
 
@@ -231,18 +274,16 @@ ggplot(pc, aes(x = age)) +
 
 #Taux de retour en fonction de différents indicateurs
 donnees_preparees %>%
-  select(taux_retour, age_rev_rec, nb_salaries_, ca_, surfco_) %>%
+  select(taux_retour, age_rev_rec, nb_salaries_rec, ca_, taille_reco_rec) %>%
   tbl_summary(by = taux_retour, percent = "row")
 
 donnees_preparees %>%
-  select(age_stock, age_rev_rec, nb_salaries_, ca_, surfco_) %>%
+  select(age_stock, age_rev_rec, nb_salaries_rec, ca_, taille_reco_rec) %>%
   tbl_summary(by = age_stock, percent = "row")
 
 donnees_preparees %>%
-  select(taux_rotation, age_rev_rec, nb_salaries_, ca_, surfco_) %>%
+  select(taux_rotation, age_rev_rec, nb_salaries_rec, ca_, taille_reco_rec) %>%
   tbl_summary(by = taux_rotation, percent = "row")
-
-
 
 #Rentabilité au mètre carré
 ggplot(donnees_preparees, aes(y = rentabilité, x = taille_reco)) +
@@ -285,7 +326,7 @@ g <- donnees_preparees %>%
 g_df <- as.data.frame(g) %>%
   select(1, 3) %>%
   rename(variable = '**Characteristic**',
-         valeur = '**1**, N = 116') %>%
+         valeur = '**1**  \nN = 116') %>%
   filter(variable != "ca_",
          variable != "Unknown") %>%
   mutate(valeur1 = c(75, 33, 50, 25)) #Je ne comprends pas pq c'est dans cet ordre ??!!
@@ -299,8 +340,6 @@ g_df$variable <- g_df$variable %>%
     "600k à 1199k (n = 46)" = "600k à 1199k",
     "1,2 M€ et plus (n = 28)" = "1,2 M€ et plus"
   )
-
-table(donnees_preparees$ca_)
 
 ordre_modalites <- c(
   "Inférieur à 300k (n = 91)",
@@ -344,7 +383,7 @@ h <- donnees_preparees %>%
 h_df <- as.data.frame(h) %>%
   select(1, 3) %>%
   rename(variable = '**Characteristic**',
-         valeur = '**1**, N = 174') %>%
+         valeur = '**1**  \nN = 174') %>%
   filter(variable != "ca_",
          variable != "Unknown") %>%
   mutate(valeur1 = c(57, 58, 59, 57))
@@ -382,16 +421,16 @@ hplot <- ggplot(h_df, aes(x = variable, y = valeur1)) +
 
 #PORTASSO et TAILLE
 i <- donnees_preparees %>%
-  select(portasso, surfco_) %>%
+  select(portasso, taille_reco_rec) %>%
   tbl_summary(by = portasso, percent = "row")
 
 i_df <- as.data.frame(i)%>%
   select(1, 3) %>%
   rename(variable = '**Characteristic**',
-         valeur = '**1**, N = 174') %>%
+         valeur = '**1**  \nN = 174') %>%
   filter(variable != "surfco_",
          variable != "Unknown") %>%
-  mutate(valeur1 = c(59, 55, 56))
+  mutate(valeur1 = c(NA, 59, 55, 56))
 
 i_df$variable <- i_df$variable %>%
   as.character() %>%
@@ -430,16 +469,16 @@ iplot <- ggplot(i_df, aes(x = variable, y = valeur1)) +
 
 #SITVEN et TAILLE
 j <- donnees_preparees %>%
-  select(sitven, surfco_) %>%
+  select(sitven, taille_reco_rec) %>%
   tbl_summary(by = sitven, percent = "row")
 
 j_df <- as.data.frame(j)%>%
   select(1, 3) %>%
   rename(variable = '**Characteristic**',
-         valeur = '**1**, N = 116') %>%
+         valeur = '**1**  \nN = 116') %>%
   filter(variable != "surfco_",
          variable != "Unknown") %>%
-  mutate(valeur1 = c(26, 47, 72))
+  mutate(valeur1 = c(NA, 26, 47, 72))
 
 j_df$variable <- j_df$variable %>%
   as.character() %>%
@@ -613,4 +652,3 @@ ggplot(panne, aes(x = "", y = prop_panne, fill = panne1)) +
             position = position_stack(vjust = 0.5), 
             color = "white", 
             size = 5)
-

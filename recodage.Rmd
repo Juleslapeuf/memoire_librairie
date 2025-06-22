@@ -4,7 +4,6 @@ author: "Jules Gourvennec"
 date: "2025-06-19"
 output: html_document
 ---
-
 ```{r}
 library(FactoMineR)
 library(ade4)
@@ -34,6 +33,7 @@ library(factoextra)
 library(RColorBrewer)
 library(sf)
 library(tidygeocoder)
+library(stringi)
 
 ```
 
@@ -42,6 +42,18 @@ Mon coeur de cible était les gérants des librairies, et il s'avère que la pas
 ```{r}
 doc_quest <- read.csv("https://minio.lab.sspcloud.fr/juleslapeuf/data.csv")
 ```
+```{r}
+generate_code <- function() {
+  digits_part1 <- stri_rand_strings(1, 2, "[0-9]")
+  letters <- stri_rand_strings(1, 2, "[A-Z]")
+  digits_part2 <- stri_rand_strings(1, 2, "[0-9]")
+  return(paste0(digits_part1, letters, digits_part2))
+}
+
+doc_quest <- doc_quest %>%
+  mutate(code = sapply(1:nrow(doc_quest), function(x) generate_code()))
+```
+
 J'ai pu contacté les librairies généralistes indépendantes par mail grâce à une liste de mails récupérée auprès d'un professionnel de la chaîne du livre, et à partir de là j'ai ciblé les librairies généralistes indépendantes, en faisant attention de n'avoir que des librairies dont l'activité principale était la vente de livres. Même après sélection des adresses mail, il me restait encore des oublis, d'où le filtre sur le type de librairie.
 ```{r}
 donnees_preparees <- doc_quest %>%
@@ -63,7 +75,7 @@ donnees_preparees <- doc_quest %>%
          outils_inf = 'Avez.vous.recours.plus.souvent.à.des.outils.informatiques.et.ou.numériques.depuis.la.fin.de.la.pandémie..',
          logspe_panne = 'Votre.librairie.pourrait.elle.fonctionner.comme.d.habitude.si.votre.logiciel.spécialisé.tombait.en.panne...',
          diff_eco = 'Rencontrez.vous.des.difficultés.économiques...') %>%
-  select(2:19)
+  select(2:20)
 
 donnees_preparees <- donnees_preparees %>%
   filter(type == "Généraliste")
@@ -379,6 +391,8 @@ donnees_preparees$diff_eco_rec <- donnees_preparees$diff_eco %>%
   ) %>%
   as.numeric()
 ```
+J'ai des messages type warning, mais quand je vérifie les modalités non prises en compte ont quand même été recodées, donc il y a quelque chose à creuser à ce niveau-là.
+
 ... , soit pour catégoriser (notamment le nombre de salariés). Catégorisation qui a tout d'arbitraire, mais qui a été réalisée à l'aide de la fonction fct_recode et la fenêtre pop-up très pratique.
 ```{r}
 #CA
