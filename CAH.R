@@ -1,13 +1,28 @@
-install.packages("cluster")
+#install.packages("cluster")
 library(cluster)
-install.packages("TraMineR")
+#install.packages("TraMineR")
 library(TraMineR)
-install.packages("WeightedCluster")
+#install.packages("WeightedCluster")
 library(WeightedCluster)
+install.packages("GGally")
+library(GGally)
+
+source("/home/onyxia/work/memoire_librairie/recodage.R")
 
 #CAH
+donnees_preparees <- donnees_preparees %>%
+  rename(surfco_ = "taille_reco_rec",
+         nb_salaries_ = "nb_salaries_rec")
 
-d <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "surfco_", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule")]
+d <- donnees_preparees %>%
+  select(
+    etiq, liseuse, gpdiscu, sitven, portasso,
+    maillist, obslib, bibnum, ressoc, ressocspe,
+    logspec, surfco_, nb_salaries_, ca_,
+    taux_retour, pass_cais, ca_semaine, remise,
+    panier_moy, age_stock, taux_rotation,
+    compte_banq, renta_m2, fonds_roule
+  )
 d <- mutate_all(d, as.factor)
 d <- na.omit(d)
 
@@ -53,7 +68,6 @@ ggtable(
   columnsX = "typo",
   columnsY = names(d1)[1:8],
   cells = "col.prop")
-#Répéter avec 9:16 et 17:24
 ggtable(
   d1,
   columnsX = "typo",
@@ -73,9 +87,6 @@ ggtable(
   fill = "std.resid") +
   labs(fill = "Résidus standardisés du Chi²") +
   theme(legend.position = "bottom")
-
-# legend = 8) + #--> Pour faire la légende, dans ggtable. La commande dans les autres ne sert à r
-
 ggtable(
   d1,
   columnsX = "typo",
@@ -84,3 +95,5 @@ ggtable(
   fill = "std.resid") +
   labs(fill = "Résidus standardisés du Chi²") +
   theme(legend.position = "bottom")
+
+rm(list = c("cah", "dendro", "wardRange"))

@@ -1,4 +1,10 @@
-source("/home/onyxia/work/memoire_librairie/recodage.R")
+source("/home/onyxia/work/memoire_librairie/ACM.R")
+#install.packages("gt")
+#install.packages("gtsummary")
+#install.packages("gridExtra")
+library(gridExtra)
+library(gt)
+library(gtsummary)
 
 # Parts du marché du livre
 pourcent <- data.frame(
@@ -270,19 +276,17 @@ ggplot(pc, aes(x = age)) +
     panel.border = element_rect(linetype = , fill = NA)
   )
 
-
-
 #Taux de retour en fonction de différents indicateurs
 donnees_preparees %>%
-  select(taux_retour, age_rev_rec, nb_salaries_rec, ca_, taille_reco_rec) %>%
+  select(taux_retour, age_rev_rec, nb_salaries_, ca_, surfco_) %>%
   tbl_summary(by = taux_retour, percent = "row")
 
 donnees_preparees %>%
-  select(age_stock, age_rev_rec, nb_salaries_rec, ca_, taille_reco_rec) %>%
+  select(age_stock, age_rev_rec, nb_salaries_, ca_, surfco_) %>%
   tbl_summary(by = age_stock, percent = "row")
 
 donnees_preparees %>%
-  select(taux_rotation, age_rev_rec, nb_salaries_rec, ca_, taille_reco_rec) %>%
+  select(taux_rotation, age_rev_rec, nb_salaries_, ca_, surfco_) %>%
   tbl_summary(by = taux_rotation, percent = "row")
 
 #Rentabilité au mètre carré
@@ -421,7 +425,7 @@ hplot <- ggplot(h_df, aes(x = variable, y = valeur1)) +
 
 #PORTASSO et TAILLE
 i <- donnees_preparees %>%
-  select(portasso, taille_reco_rec) %>%
+  select(portasso, surfco_) %>%
   tbl_summary(by = portasso, percent = "row")
 
 i_df <- as.data.frame(i)%>%
@@ -430,7 +434,7 @@ i_df <- as.data.frame(i)%>%
          valeur = '**1**  \nN = 174') %>%
   filter(variable != "surfco_",
          variable != "Unknown") %>%
-  mutate(valeur1 = c(NA, 59, 55, 56))
+  mutate(valeur1 = c(59, 55, 56))
 
 i_df$variable <- i_df$variable %>%
   as.character() %>%
@@ -469,7 +473,7 @@ iplot <- ggplot(i_df, aes(x = variable, y = valeur1)) +
 
 #SITVEN et TAILLE
 j <- donnees_preparees %>%
-  select(sitven, taille_reco_rec) %>%
+  select(sitven, surfco_) %>%
   tbl_summary(by = sitven, percent = "row")
 
 j_df <- as.data.frame(j)%>%
@@ -478,7 +482,7 @@ j_df <- as.data.frame(j)%>%
          valeur = '**1**  \nN = 116') %>%
   filter(variable != "surfco_",
          variable != "Unknown") %>%
-  mutate(valeur1 = c(NA, 26, 47, 72))
+  mutate(valeur1 = c(26, 47, 72))
 
 j_df$variable <- j_df$variable %>%
   as.character() %>%
@@ -540,83 +544,11 @@ gt(tab_cor) %>%
   )
 
 #FREQUENCE DES CLASSES CAH
-frequence <- freq(classe) %>%
-  mutate(classe = c(1, 2, 3)) %>%
-  select(4, 1, 2)
+frequence <- as.data.frame(table(classe))
 
 gt(frequence) %>%
   tab_header(
     title = "Fréquence des classes"
-  )
-gt(cordim1) %>%
-  tab_header(
-    title = "Coefficients de corrélations des modalités à l'axe 1"
-  )
-
-#TABLEAU DES PROPORTIONS PAR REGION
-tableau_prop_regions <- nb_regions_df %>%
-  mutate(prop_regions = round(frq_regions * 100 / 257, 1))
-
-tab_regions_carto <- left_join(tableau_prop_regions, nb_regions_ursaf, by = "nom_regions")
-
-gt(tab_regions_carto) %>%
-  tab_header(
-    title = "Détail des proportions de répondants par région"
-  ) %>%
-  cols_label(
-    nom_regions = "Région",
-    frq_regions = "Fréquence",
-    prop_regions = "Proportion (%)",
-    frq_regions_ursaf = "Fréquence",
-    prop_regions_ursaf = "Proportion (%)"
-  ) %>%
-  tab_style(
-    style = cell_text(weight = "bold"),
-    locations = cells_column_labels()
-  )%>%
-  tab_style(
-    style = cell_borders(
-      sides = "bottom",
-      color = "black",
-      weight = px(2)
-    ),
-    locations = cells_column_labels()
-  ) %>%
-  tab_style(
-    style = cell_borders(
-      sides = "bottom",
-      color = "black",
-      weight = px(2)
-    ),
-    locations = cells_title(groups = "title")
-  ) %>%
-  tab_style(
-    style = cell_borders(
-      sides = "right",
-      color = "black",
-      weight = px(2)
-    ),
-    locations = cells_body(
-      columns = "prop_regions"
-    )
-  ) %>%
-  tab_style(
-    style = cell_borders(
-      sides = "right",
-      color = "black",
-      weight = px(2)
-    ),
-    locations = cells_body(
-      columns = "nom_regions"
-    )
-  ) %>%
-  tab_footnote(
-    footnote = "Source : Questionnaire d'enquête 2024",
-    locations = cells_column_labels(columns = c(frq_regions, prop_regions))
-    ) %>%
-  tab_footnote(
-    footnote = "Source : URSAF 2020",
-    locations = cells_column_labels(columns = c(frq_regions_ursaf, prop_regions_ursaf))
   )
 
 #Par rapport à si oui ou non ça pourrait fonctionner sans

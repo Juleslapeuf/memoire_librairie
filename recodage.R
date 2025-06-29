@@ -1,6 +1,8 @@
 library(tidyverse)
 library(stringi)
 
+rm(list = ls())
+
 #Les données proviennent d'un questionnaire que j'ai fait passer par internet à des libraires 
 #généralistes indépendants. Dans certains cas, j'ai fait passer le questionnaire par voie téléphonique,
 #et parfois j'ai contacté directement des libraires afin de discuter de leurs réponses au questionnaire.

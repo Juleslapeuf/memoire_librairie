@@ -8,26 +8,7 @@ library(ade4)
 library(FactoMineR)
 #ACP
 
-donnees_preparees <- donnees_preparees %>%
-  rename(surfco_ = "taille_reco_rec",
-         nb_salaries_ = "nb_salaries_rec")
-
-d <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "surfco_", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule")]
-d <- mutate_all(d, as.factor)
-d <- na.omit(d)
-
-d2 <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "surfco_", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule", "age_rev_rec")]
-d2 <- mutate_all(d2, as.factor)
-d2 <- d2 %>%
-  filter(complete.cases(across(-age_rev_rec)))
-
-d3 <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "surfco_", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule", "diff_eco_rec")]
-d3 <- mutate_all(d3, as.factor)
-d3 <- d3 %>%
-  filter(complete.cases(across(-diff_eco_rec)))
-
-d4 <- d3 %>%
-  select(-diff_eco_rec)
+source("/home/onyxia/work/memoire_librairie/CAH.R")
 
 #avec ade4
 acm <- dudi.acm(df = d, scannf = FALSE, nf = 5)
@@ -95,15 +76,6 @@ palette_custom <- c("#FF0000", "#FF0000",
 nuage <- ggcloud_variables(acm2, shapes=FALSE, legend="none", col = palette_custom, col.by.group = TRUE)
 #Projeter la variable supplémentaire sur le nuage de points
 ggadd_supvar(nuage, acm2, d1$typo, col="seagreen", shape=NULL)
-dimeta2(acm2, d1[,"typo"]) #--> Cette typo est très associée à l'axe 1
-
-ggadd_supvar(nuage, acm2, d2$age_rev_rec, col="royalblue", shape=NULL)
-dimeta2(acm2, d2[,"age_rev_rec"]) #--> Vraiment moyen avec l'âge
-
-ggadd_supvar(nuage, acm2, axes = c(1, 2), d3$diff_eco_rec, col="magenta4", shape=NULL)
-dimeta2(acm2, d3[,"diff_eco_rec"]) #--> Pareil, pas concluant
-cordim1 <- dimdescr(acm2, d3[,"diff_eco_rec"])$dim.1$categories
-cordim2 <- dimdescr(acm2, d3[,"diff_eco_rec"])$dim.2$categories
 
 #Ellipses de correlation POUR TYPO
 ggadd_kellipses(nuage_indiv, acm2, d1$typo, label=FALSE)
@@ -127,7 +99,6 @@ ggcloud_indiv(acm2, axes = c(1, 3), density="hex", hex.bin=10)
 nuage_13 <- ggcloud_variables(acm2, axes = c(1, 3), shapes = FALSE, legend = "none", col = palette_custom, col.by.group = TRUE)
 #Projeter la variable supplémentaire sur le nuage de points
 ggadd_supvar(nuage_13, acm2, d1$typo, col="seagreen", shape=NULL)
-dimeta2(acm2, d1[,"typo"])
 #Où les gens se situent dans l'ellipse
 x1 <- ggadd_density(nuage_13, acm2, var=d1$typo, cat="1", density="area", ellipse=TRUE)
 x1 <- ggadd_density(x, acm2, var=d1$typo, cat="2", density="area", ellipse=TRUE)
