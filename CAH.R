@@ -1,10 +1,16 @@
+install.packages("cluster")
+library(cluster)
+install.packages("TraMineR")
+library(TraMineR)
+install.packages("WeightedCluster")
+library(WeightedCluster)
+
 #CAH
 
-d <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "taille_reco_rec", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule")]
+d <- donnees_preparees[, c("etiq", "liseuse", "gpdiscu", "sitven", "portasso", "maillist", "obslib", "bibnum", "ressoc", "ressocspe", "logspec", "surfco_", "nb_salaries_", "ca_", "taux_retour", "pass_cais", "ca_semaine", "remise", "panier_moy", "age_stock", "taux_rotation", "compte_banq", "renta_m2", "fonds_roule")]
 d <- mutate_all(d, as.factor)
 d <- na.omit(d)
 
-names(donnees_preparees)
 # Classification Ascendante Hiérarchique (CAH) ----
 
 distance <- daisy(d, metric = "euclidean")
@@ -18,7 +24,7 @@ as.hclust(cah) %>% rect.hclust(k = 3, border = "red")
 
 nbcl <- 3
 classe <- cutree(cah, nbcl) %>% as.factor()
-freq(classe)
+table(classe)
 
 
 # On peut aussi représenter la part d'inertie expliquée (R2) selon le nombre de classes
@@ -30,8 +36,6 @@ inertie <- sort(cah$height, decreasing = TRUE)
 plot(inertie[1:20], type = "s", xlab = "Nombre de classes", ylab = "Inertie") # Un saut plutôt à 4 ou 6
 points(c(3, 4, 6), inertie[c(2, 4, 6)], col = c("green3", "red3", "blue3"), cex = 2, lwd = 3)
 
-best.cutree(cah, graph = TRUE, xlab = "Nombre de classes", ylab = "Inertie relative")
-
 # Indicateurs de qualité des partitions
 wardRange <- as.clustrange(cah, diss = distance, ncluster = 15)
 summary(wardRange, max.rank = 2)
@@ -40,7 +44,7 @@ plot(wardRange, stat = c('ASW','CH','HC','HG','PBC'), norm = "zscore", main = "I
 d1 <- d
 
 typo <- cutree(cah, 3)
-freq(typo)
+table(typo)
 d1$typo <- cutree(cah, 3)
 d1$typo <- factor(d1$typo)
 

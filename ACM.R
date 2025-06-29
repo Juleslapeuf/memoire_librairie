@@ -1,3 +1,11 @@
+#install.packages("FactoMineR")
+#install.packages("ade4")
+#install.packages("factoextra")
+#install.packages("GDAtools")
+library(GDAtools)
+library(factoextra)
+library(ade4)
+library(FactoMineR)
 #ACP
 
 donnees_preparees <- donnees_preparees %>%
@@ -21,7 +29,7 @@ d3 <- d3 %>%
 d4 <- d3 %>%
   select(-diff_eco_rec)
 
-#avec FactoMineR
+#avec ade4
 acm <- dudi.acm(df = d, scannf = FALSE, nf = 5)
 explor::explor(acm)
 
