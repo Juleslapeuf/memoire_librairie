@@ -4,21 +4,18 @@ library(cluster)
 library(TraMineR)
 #install.packages("WeightedCluster")
 library(WeightedCluster)
-install.packages("GGally")
+#install.packages("GGally")
 library(GGally)
 
 source("/home/onyxia/work/memoire_librairie/recodage.R")
 
 #CAH
-donnees_preparees <- donnees_preparees %>%
-  rename(surfco_ = "taille_reco_rec",
-         nb_salaries_ = "nb_salaries_rec")
 
 d <- donnees_preparees %>%
   select(
     etiq, liseuse, gpdiscu, sitven, portasso,
     maillist, obslib, bibnum, ressoc, ressocspe,
-    logspec, surfco_, nb_salaries_, ca_,
+    logspec, surfco_, nb_salaries_, ca_rec_rec,
     taux_retour, pass_cais, ca_semaine, remise,
     panier_moy, age_stock, taux_rotation,
     compte_banq, renta_m2, fonds_roule

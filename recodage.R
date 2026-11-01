@@ -12,7 +12,7 @@ rm(list = ls())
 #De fait, j'ai exclu les variables socio-démographiques et je n'ai gardé que les variables concernant 
 #l'entreprise. Pour une future enquête, j'aurais des erreurs à ne pas commettre à nouveau.
 
-doc_quest <- read.csv("https://minio.lab.sspcloud.fr/juleslapeuf/data.csv")
+doc_quest <- read.csv("https://minio.lab.sspcloud.fr/juleslapeuf/data_bis.csv")
 
 generate_code <- function() {
   digits_part1 <- stri_rand_strings(1, 2, "[0-9]")
@@ -122,13 +122,12 @@ donnees_preparees[300, 5] <- "0"
 donnees_preparees$sal_tpl_rec <- donnees_preparees$sal_tpl %>%
   as.factor() %>%
   fct_recode(
-    "0" = "0.85",
     "1" = "1 + gérante",
-    "1" = "1 salariée à 35h.",
+    "1" = "1 salariée à 35h. ",
     "1" = "1,5",
     "1" = "1.5",
     "1" = "1+1",
-    "2" = "2 et 2 co gérantes",
+    "2" = "2 et 2 co gérantes ",
     "0" = "2 gérents non salaries",
     "1" = "3 (dont 2 alternants)",
     "3" = "3 salariés + 1 gérante",
@@ -175,9 +174,9 @@ donnees_preparees$ca_rec <- donnees_preparees$ca %>%
     "1000000" = "1.000.000",
     "1900000" = "1.900.000",
     "100000" = "100 000",
-    "110000" = "110 000 €",
+    "110000" = "110 000 € ",
     "121000" = "121 000 HT",
-    "130000" = "130 000 euros",
+    "130000" = "130 000 euros ",
     "130000" = "130000€",
     "150000" = "150",
     "1500000" = "1500000 TTC",
@@ -220,7 +219,7 @@ donnees_preparees$ca_rec <- donnees_preparees$ca %>%
     "410000" = "410.000€",
     "450000" = "450 000",
     "456000" = "456 000",
-    "480000" = "480 000",
+    "480000" = "480 000 ",
     "483000" = "483000 HT",
     "484712" = "484.712 HT",
     "500000" = "500 000",
@@ -240,16 +239,21 @@ donnees_preparees$ca_rec <- donnees_preparees$ca %>%
     "2000000" = "environs 2 000 000 €",
     NULL = "Etablissement moyen",
     NULL = "je ne sais plus",
-    NULL = "Pas encore de bilan comptable terminé mais 165 000",
+    "165000" = "Pas encore de bilan comptable terminé mais 165 000",
     NULL = "pas encore fait une année complète",
     "500000" = "plus de  500 000 €",
     "4000000" = "superieur 4 millions",
     NULL = "warf warf warf",
-    "840000" = "840.000"
+    "840000" = "840.000",
+    "555000" = "555 K€ TTC",
+    "290000" = "290 000",
+    "205000" = "environ 205 000 euros",
+    "126000" = "126 000",
+    "260000" = "260 000",
+    "24000" = "240 000"
   ) %>%
   as.character() %>%
   as.numeric()
-
 
 #Variables sur les pratiques numériques
 donnees_preparees <- donnees_preparees %>%
@@ -367,193 +371,29 @@ donnees_preparees$diff_eco_rec <- donnees_preparees$diff_eco %>%
   ) %>%
   as.numeric()
 
-
-#J'ai des messages type warning, mais quand je vérifie les modalités non prises en compte ont quand 
-#même été recodées, donc il y a quelque chose à creuser à ce niveau-là.
-
-#... , soit pour catégoriser (notamment le nombre de salariés). Catégorisation qui a tout d'arbitraire,
-#mais qui a été réalisée à l'aide de la fonction fct_recode et la fenêtre pop-up très pratique.
-
 ###CATEGORISATION
 
 #CA
-donnees_preparees$ca_rec_rec <- donnees_preparees$ca_rec %>%
-  as.character() %>%
-  fct_recode(
-    "Inférieur à 300k" = "20000",
-    "Inférieur à 300k" = "60000",
-    "Inférieur à 300k" = "65000",
-    "Inférieur à 300k" = "70000",
-    "Inférieur à 300k" = "77000",
-    "Inférieur à 300k" = "90000",
-    "Inférieur à 300k" = "95000",
-    "Inférieur à 300k" = "96000",
-    "Inférieur à 300k" = "98000",
-    "Inférieur à 300k" = "100000",
-    "Inférieur à 300k" = "110000",
-    "Inférieur à 300k" = "121000",
-    "Inférieur à 300k" = "122000",
-    "Inférieur à 300k" = "123009",
-    "Inférieur à 300k" = "124000",
-    "Inférieur à 300k" = "130000",
-    "Inférieur à 300k" = "134000",
-    "Inférieur à 300k" = "138450",
-    "Inférieur à 300k" = "139968",
-    "Inférieur à 300k" = "140000",
-    "Inférieur à 300k" = "150000",
-    "Inférieur à 300k" = "154000",
-    "Inférieur à 300k" = "159000",
-    "Inférieur à 300k" = "160000",
-    "Inférieur à 300k" = "164500",
-    "Inférieur à 300k" = "170000",
-    "Inférieur à 300k" = "177000",
-    "Inférieur à 300k" = "180000",
-    "Inférieur à 300k" = "186000",
-    "Inférieur à 300k" = "187320",
-    "Inférieur à 300k" = "190400",
-    "Inférieur à 300k" = "197000",
-    "Inférieur à 300k" = "200000",
-    "Inférieur à 300k" = "210000",
-    "Inférieur à 300k" = "220000",
-    "Inférieur à 300k" = "222892",
-    "Inférieur à 300k" = "230000",
-    "Inférieur à 300k" = "235000",
-    "Inférieur à 300k" = "240000",
-    "Inférieur à 300k" = "241000",
-    "Inférieur à 300k" = "249000",
-    "Inférieur à 300k" = "250000",
-    "Inférieur à 300k" = "255000",
-    "Inférieur à 300k" = "260000",
-    "Inférieur à 300k" = "261000",
-    "Inférieur à 300k" = "266314",
-    "Inférieur à 300k" = "270000",
-    "Inférieur à 300k" = "272000",
-    "Inférieur à 300k" = "280000",
-    "Inférieur à 300k" = "285000",
-    "Inférieur à 300k" = "289000",
-    "Inférieur à 300k" = "290000",
-    "Inférieur à 300k" = "295000",
-    "300k à 599k" = "300000",
-    "300k à 599k" = "305000",
-    "300k à 599k" = "310000",
-    "300k à 599k" = "311529",
-    "300k à 599k" = "314500",
-    "300k à 599k" = "317000",
-    "300k à 599k" = "320000",
-    "300k à 599k" = "325000",
-    "300k à 599k" = "342000",
-    "300k à 599k" = "350000",
-    "300k à 599k" = "355000",
-    "300k à 599k" = "358000",
-    "300k à 599k" = "360000",
-    "300k à 599k" = "365400",
-    "300k à 599k" = "367700",
-    "300k à 599k" = "370000",
-    "300k à 599k" = "380000",
-    "300k à 599k" = "382100",
-    "300k à 599k" = "382881",
-    "300k à 599k" = "390000",
-    "300k à 599k" = "392000",
-    "300k à 599k" = "392300",
-    "300k à 599k" = "400000",
-    "300k à 599k" = "410000",
-    "300k à 599k" = "414000",
-    "300k à 599k" = "420000",
-    "300k à 599k" = "424000",
-    "300k à 599k" = "430000",
-    "300k à 599k" = "436000",
-    "300k à 599k" = "440000",
-    "300k à 599k" = "447000",
-    "300k à 599k" = "450000",
-    "300k à 599k" = "456000",
-    "300k à 599k" = "460000",
-    "300k à 599k" = "469000",
-    "300k à 599k" = "480000",
-    "300k à 599k" = "483000",
-    "300k à 599k" = "484712",
-    "300k à 599k" = "485000",
-    "300k à 599k" = "500000",
-    "300k à 599k" = "508000",
-    "300k à 599k" = "517000",
-    "300k à 599k" = "520000",
-    "300k à 599k" = "525000",
-    "300k à 599k" = "536000",
-    "300k à 599k" = "550000",
-    "300k à 599k" = "580000",
-    "600k à 1199k" = "600000",
-    "600k à 1199k" = "610000",
-    "600k à 1199k" = "617000",
-    "600k à 1199k" = "634000",
-    "600k à 1199k" = "640000",
-    "600k à 1199k" = "650000",
-    "600k à 1199k" = "657000",
-    "600k à 1199k" = "670000",
-    "600k à 1199k" = "685000",
-    "600k à 1199k" = "700000",
-    "600k à 1199k" = "720000",
-    "600k à 1199k" = "725000",
-    "600k à 1199k" = "738000",
-    "600k à 1199k" = "750000",
-    "600k à 1199k" = "763000",
-    "600k à 1199k" = "770000",
-    "600k à 1199k" = "780000",
-    "600k à 1199k" = "790000",
-    "600k à 1199k" = "800000",
-    "600k à 1199k" = "810000",
-    "600k à 1199k" = "820000",
-    "600k à 1199k" = "840000",
-    "600k à 1199k" = "850000",
-    "600k à 1199k" = "870000",
-    "600k à 1199k" = "880000",
-    "600k à 1199k" = "887000",
-    "600k à 1199k" = "930000",
-    "600k à 1199k" = "960000",
-    "600k à 1199k" = "1000000",
-    "600k à 1199k" = "1080000",
-    "600k à 1199k" = "1100000",
-    "600k à 1199k" = "1125000",
-    "600k à 1199k" = "1160175",
-    "1,2 M€ et plus" = "1200000",
-    "1,2 M€ et plus" = "1300000",
-    "1,2 M€ et plus" = "1350000",
-    "1,2 M€ et plus" = "1400000",
-    "1,2 M€ et plus" = "1500000",
-    "1,2 M€ et plus" = "1525000",
-    "1,2 M€ et plus" = "1550000",
-    "1,2 M€ et plus" = "1600000",
-    "1,2 M€ et plus" = "1700000",
-    "1,2 M€ et plus" = "1720000",
-    "1,2 M€ et plus" = "1800000",
-    "1,2 M€ et plus" = "1900000",
-    "1,2 M€ et plus" = "1923000",
-    "1,2 M€ et plus" = "2000000",
-    "1,2 M€ et plus" = "2433000",
-    "1,2 M€ et plus" = "3000000",
-    "1,2 M€ et plus" = "3300000",
-    "1,2 M€ et plus" = "4000000"
-  ) %>%
-  fct_relevel(
-    "Inférieur à 300k",
-    "300k à 599k",
-    "600k à 1199k",
-    "1,2 M€ et plus"
-  )
 
-donnees_preparees$ca_ <- donnees_preparees$ca_rec_rec %>%
-  fct_recode(
-    "Inférieur à 300k" = "198000",
-    "Inférieur à 300k" = "1e+05",
-    "600k à 1199k" = "1e+06",
-    "Inférieur à 300k" = "2e+05",
-    "1,2 M€ et plus" = "2e+06",
-    "300k à 599k" = "3e+05",
-    "1,2 M€ et plus" = "3e+06",
-    "300k à 599k" = "4e+05",
-    "1,2 M€ et plus" = "4e+06",
-    "300k à 599k" = "5e+05",
-    "600k à 1199k" = "6e+05",
-    "600k à 1199k" = "7e+05",
-    "600k à 1199k" = "8e+05"
+donnees_preparees <- donnees_preparees %>%
+  mutate(
+    ca_rec_rec = case_when(
+      ca_rec < 300000 ~ "Inférieur à 300k",
+      ca_rec < 600000 & ca_rec >= 300000 ~ "300k à 599k",
+      ca_rec < 1200000 & ca_rec >= 600000 ~ "600k à 1199k",
+      ca_rec >= 1200000 ~ "1,2 M€ et plus",
+      TRUE ~ NA_character_
+    ),
+    ca_rec_rec = factor(ca_rec_rec)
+  ) %>%
+  mutate(
+    ca_rec_rec = fct_relevel(
+      ca_rec_rec,
+      "Inférieur à 300k",
+      "300k à 599k",
+      "600k à 1199k",
+      "1,2 M€ et plus"
+    )
   )
 
 #Code postal
@@ -574,119 +414,79 @@ donnees_preparees <- donnees_preparees %>%
     postcode_clear_numeric == 9270 ~ "09",
     TRUE ~ str_sub(as.character(postcode_clear_numeric), start = 1L, end = 2L)
   ))
+
 departements_region <- read_csv("https://minio.lab.sspcloud.fr/juleslapeuf/departements-region.csv")
 
 donnees_preparees <- left_join(donnees_preparees, departements_region, by = c("code_dpt" = "num_dep"))
 
+# Age
 donnees_preparees <- donnees_preparees %>%
   mutate(annee_reco_num = as.numeric(annee_reco)) %>%
   mutate(age_rev = 2023 - annee_reco_num)
 
-donnees_preparees$age_rev_rec <- donnees_preparees$age_rev %>%
-  as.character() %>%
-  fct_recode(
-    "30 ans et moins" = "24",
-    "30 ans et moins" = "25",
-    "30 ans et moins" = "26",
-    "30 ans et moins" = "27",
-    "30 ans et moins" = "29",
-    "30 ans et moins" = "30",
-    "31 - 35 ans" = "31",
-    "31 - 35 ans" = "32",
-    "31 - 35 ans" = "33",
-    "31 - 35 ans" = "34",
-    "31 - 35 ans" = "35",
-    "36 - 40 ans" = "36",
-    "36 - 40 ans" = "37",
-    "36 - 40 ans" = "38",
-    "36 - 40 ans" = "39",
-    "36 - 40 ans" = "40",
-    "41 - 45 ans" = "41",
-    "41 - 45 ans" = "42",
-    "41 - 45 ans" = "43",
-    "41 - 45 ans" = "44",
-    "41 - 45 ans" = "45",
-    "46 - 50 ans" = "46",
-    "46 - 50 ans" = "47",
-    "46 - 50 ans" = "48",
-    "46 - 50 ans" = "49",
-    "46 - 50 ans" = "50",
-    "51 - 55 ans" = "51",
-    "51 - 55 ans" = "52",
-    "51 - 55 ans" = "53",
-    "51 - 55 ans" = "54",
-    "51 - 55 ans" = "55",
-    "56 - 60 ans" = "56",
-    "56 - 60 ans" = "57",
-    "56 - 60 ans" = "58",
-    "56 - 60 ans" = "59",
-    "56 - 60 ans" = "60",
-    "61 ans et plus" = "61",
-    "61 ans et plus" = "62",
-    "61 ans et plus" = "63",
-    "61 ans et plus" = "64",
-    "61 ans et plus" = "65",
-    "61 ans et plus" = "69",
-    "61 ans et plus" = "70",
-    "61 ans et plus" = "71",
-    "61 ans et plus" = "72",
-    "61 ans et plus" = "79"
-  ) %>%
-  fct_relevel(
-    "30 ans et moins",
-    "31 - 35 ans",
-    "36 - 40 ans",
-    "41 - 45 ans",
-    "46 - 50 ans",
-    "51 - 55 ans",
-    "56 - 60 ans",
-    "61 ans et plus"
+donnees_preparees <- donnees_preparees %>%
+  mutate(
+    age_rev_rec = case_when(
+      age_rev <= 30 ~ "30 ans et moins",
+      age_rev <= 35 ~ "31 - 35 ans",
+      age_rev <= 40 ~ "36 - 40 ans",
+      age_rev <= 45 ~ "41 - 45 ans",
+      age_rev <= 50 ~ "46 - 50 ans",
+      age_rev <= 55 ~ "51 - 55 ans",
+      age_rev <= 60 ~ "56 - 60 ans",
+      age_rev > 60 ~ "61 ans et plus",
+      TRUE ~ NA_character_
+    ),
+    age_rev_rec = factor(
+      age_rev_rec,
+      levels = c(
+        "30 ans et moins",
+        "31 - 35 ans",
+        "36 - 40 ans",
+        "41 - 45 ans",
+        "46 - 50 ans",
+        "51 - 55 ans",
+        "56 - 60 ans",
+        "61 ans et plus"
+      )
+    )
   )
 
 #Nombre de salariés
-donnees_preparees$nb_salaries_rec <- donnees_preparees$nb_salaries %>%
-  as.character() %>%
-  fct_recode(
-    "Aucun salarié" = "0",
-    "1 à 2 salariés" = "1",
-    "1 à 2 salariés" = "2",
-    "3 à 4 salariés" = "3",
-    "3 à 4 salariés" = "4",
-    "5 à 9 salariés" = "5",
-    "5 à 9 salariés" = "6",
-    "5 à 9 salariés" = "7",
-    "5 à 9 salariés" = "8",
-    "5 à 9 salariés" = "9",
-    "10 et plus" = "10",
-    "10 et plus" = "11",
-    "10 et plus" = "12",
-    "10 et plus" = "13",
-    "10 et plus" = "14",
-    "10 et plus" = "15",
-    "10 et plus" = "17",
-    "10 et plus" = "21",
-    "10 et plus" = "27"
-  ) %>%
-  fct_relevel(
-    "Aucun salarié",
-    "1 à 2 salariés",
-    "3 à 4 salariés",
-    "5 à 9 salariés",
-    "10 et plus"
+donnees_preparees <- donnees_preparees %>%
+  mutate(
+    nb_salaries_ = case_when(
+      nb_salaries == 0 ~ "Aucun salarié",
+      nb_salaries >= 1 & nb_salaries <= 2 ~ "1 à 2 salariés",
+      nb_salaries >= 3 & nb_salaries <= 4 ~ "3 à 4 salariés",
+      nb_salaries >= 5 & nb_salaries <= 9 ~ "5 à 9 salariés",
+      nb_salaries >= 10 ~ "10 et plus",
+      TRUE ~ NA_character_
+    ),
+    nb_salaries_ = factor(
+      nb_salaries_,
+      levels = c(
+        "Aucun salarié",
+        "1 à 2 salariés",
+        "3 à 4 salariés",
+        "5 à 9 salariés",
+        "10 et plus"
+      )
+    )
   )
 
 #Taille
 donnees_preparees <- donnees_preparees %>%
-  mutate(taille_reco_rec = case_when(
+  mutate(surfco_ = case_when(
     taille_reco > 199 ~ "Plus de 200 m2",
-    taille_reco < 199 & taille_reco > 99 ~ "Entre 100 et 199 m2",
-    taille_reco < 100  ~ "Moins de 100 m2"
+    taille_reco <= 199 & taille_reco > 99 ~ "Entre 100 et 199 m2",
+    taille_reco < 100  ~ "Moins de 100 m2",
+    TRUE ~ NA_character_
   ),
-  taille_reco_rec = fct_relevel(taille_reco_rec,
+  surfco_ = fct_relevel(surfco_,
                                 "Moins de 100 m2",
                                 "Entre 100 et 199 m2",
                                 "Plus de 200 m2"))
-#Je calcule un indicateur (rentabilité au m2) ainsi que des corrélations entre variables.
 
 #Rentabilité au m2
 donnees_preparees <- donnees_preparees %>%
