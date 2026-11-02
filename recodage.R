@@ -69,12 +69,14 @@ donnees_preparees <- donnees_preparees %>%
     grepl(".19", annee_naiss) ~ substr(annee_naiss, 7, 10),
     nchar(annee_naiss) == 6 ~ paste0("19", substr(annee_naiss, 5, 6)),
     nchar(annee_naiss) == 2 ~ paste0("19", substr(annee_naiss, 1, 2)),
-    annee_naiss == '1958 ...mais la question me semble hors de propos.' ~ "1958",
+    annee_naiss == '1958 ...mais la question me semble hors de propos. ' ~ "1958",
     row_number() == 31 ~ NA_character_,
     annee_naiss == "2006" ~ NA_character_,
     annee_naiss == 'Grain de lire' ~ NA_character_,
     TRUE ~ as.character(annee_naiss)
   ))
+
+# On enlève la ligne 31 et le renseignement 2006 car il ne s'agit pas des gérant.es
 
 #Code postal
 donnees_preparees <- donnees_preparees %>%
@@ -102,6 +104,8 @@ donnees_preparees <- donnees_preparees %>%
 #Recodage de certaines modalités, car elles ont été mal remplies
 donnees_preparees[1, 5] <- "0"
 donnees_preparees[18, 5] <- "0"
+donnees_preparees[21, 4] <- "1"
+donnees_preparees[21, 5] <- "2"
 donnees_preparees[40, 4] <- "0"
 donnees_preparees[51, 5] <- "1"
 donnees_preparees[54, 5] <- "0"
@@ -110,6 +114,7 @@ donnees_preparees[83, 5] <- "0"
 donnees_preparees[103, 5] <- "0"
 donnees_preparees[132, 5] <- "0"
 donnees_preparees[139, 5] <- "0"
+donnees_preparees[142, 18] <- NA_character_
 donnees_preparees[162, 5] <- "0"
 donnees_preparees[194, 5] <- "0"
 donnees_preparees[226, 5] <- "0"

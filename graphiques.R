@@ -1,7 +1,4 @@
 source("/home/onyxia/work/memoire_librairie/ACM.R")
-#install.packages("gt")
-#install.packages("gtsummary")
-#install.packages("gridExtra")
 library(gridExtra)
 library(gt)
 library(gtsummary)
