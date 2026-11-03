@@ -1,5 +1,0 @@
-/* Justifier le texte des paragraphes */
-p {
-  text-align: justify;
-  text-justify: inter-word;
-}
