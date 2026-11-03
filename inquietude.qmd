@@ -251,7 +251,7 @@ df_inq <- df_inq %>%
 ```
 
 ```{r}
-df_inq_ca <- donnees_preparees %>%
+df_inq_ca <- df_inq %>%
   drop_na(ca_rec_rec)
 
 # MOYENNE PAR CHIFFRE D'AFFAIRES
@@ -295,7 +295,7 @@ ggplot(moyennes_ca,
   )
 
 # MOYENNE PAR NOMBRE DE SALARIES
-df_inq_salaries <- donnees_preparees %>%
+df_inq_salaries <- df_inq %>%
   drop_na(nb_salaries_)
 
 moyennes_salaries <- df_inq_salaries %>%
@@ -339,7 +339,7 @@ ggplot(moyennes_salaries,
 
 # MOYENNE PAR DIFF_ECO
 
-df_inq_diff_eco <- donnees_preparees %>%
+df_inq_diff_eco <- df_inq %>%
   drop_na(diff_eco)
 
 moyennes_diff_eco <- df_inq_diff_eco %>%

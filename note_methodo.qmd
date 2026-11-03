@@ -797,6 +797,8 @@ Déja, les trois méthodes produisent des résultats assez différents avec plut
 C'est pourquoi, je regarde la répartition des modalités pour chaque typologie afin d'identifier des profils clairs. Pour cela, on utilise le package **GGally** pour visualiser à l'aide du Chi2 les modalités sur (bleu) et sous-représentées (rouge) dans les classes.
 
 ```{r}
+#| message: false
+#| warning: false
 
 afficher_ggtable <- function(df, colonnes) {
   ggtable(
@@ -820,6 +822,9 @@ afficher_ggtable(d1_phi2, names(d1_phi2)[20:24])
 On voit tout de suite que les individus ayant un chiffre daffaires supérieur à 1,2 million d'euros sont tous regroupés dans la deuxième, ce qui est le critère déterminant de la création des classes. Ces librairies sont aussi celles avec le plus de salariés et la plus grande surface commerciale. Cela n'est pas étonnant, car ce sont les trois modalités qui contribuent le plus à la formation des axes de l'ACM et que la distance choisie ici s'appuie sur cette ACM.
 
 ```{r}
+#| message: false
+#| warning: false
+
 afficher_ggtable(d1_gower, names(d1_gower)[1:6])
 afficher_ggtable(d1_gower, names(d1_gower)[7:11])
 afficher_ggtable(d1_gower, names(d1_gower)[12:14])
@@ -827,10 +832,13 @@ afficher_ggtable(d1_gower, names(d1_gower)[15:19])
 afficher_ggtable(d1_gower, names(d1_gower)[20:24])
 ```
 
-Cette deuxième typologie distingue 2 classes, et ces classes ne sont pas uniquement formées sur les variables économiques, même si la classe 1 a une surreprésentation des unités avec un gros chiffre d'affaires et et la classe 2 une sousreprésentation de ces unités. Au niveau des pratiques quotidiennes, la classe 1 a une surreprésentation de l'usage de l'étiqueteuse, des groupes de discussion entre libraires, de l'observatoire des librairies, et au niveau des indicateurs comptables, la classe 1 connaît plus souvent : le taux de retour, le nombre de passage en caisse, le chiffre d'affaires par semaine, le taux de remise et globalement connaît plus souvent tous les indicateurs comptables
+Cette deuxième typologie distingue 2 classes, et ces classes ne sont pas uniquement formées sur les variables économiques, même si la classe 1 a une surreprésentation des unités avec un gros chiffre d'affaires et et la classe 2 une sousreprésentation de ces unités. Au niveau des pratiques quotidiennes, la classe 1 a une surreprésentation de l'usage de l'étiqueteuse, des groupes de discussion entre libraires, de l'observatoire des librairies, et au niveau des indicateurs comptables, la classe 1 connaît plus souvent : le taux de retour, le nombre de passage en caisse, le chiffre d'affaires par semaine, le taux de remise et globalement les libraires qui connaissent les indicateurs comptables sont surreprésentés dans la classe 1 et inversement pour la classe 2.
 
 Pour la dernière méthode, il faut calculer des moyennes des variables par groupe car elles sont numériques.
 ```{r}
+#| message: false
+#| warning: false
+
 tester_quantitatives <- function(df) {
 
   variables <- df %>%
@@ -889,10 +897,13 @@ moyennes_euclidiennes %>%
     subtitle = "En vert : variables présentant une différence significative entre les classes"
   )
 ```
+Ces deux classes ne se différencient pas non plus sur les critères économiques uniquement, et il semblerait qu'on retrouve les distinctions de la CAH à l'aide de la distance de Gower, cependant, pour la distance euclidienne les différences sur l'utilisation des outils numériques sont aussi significatives. 
 
-Améliorer le rendu visuel
+Après analyse des trois classifications, il semblerait que la dernière soit la plue pertinente d'un point de vue sociologique, car elle crée deux classes : une première classe proche des outils numériques et connaisseuse des indicateurs comptables, et une deuxième classe, la plus large en termes d'effectifs, avec des pratiques plus diverses et homogènes. Ces deux classes se différencient également sur les critères économiques des magasins.
 
 ### Projection des classes sur l'ACM
+
+Pour affiner le choix de la CAH, on regarde la projection des classes sur l'espace des individus, pour voir visuellement selon quel axe les classes sont distribuées.
 
 ```{r}
 individus$classe_phi2 <- factor(groupes_phi2)
@@ -956,3 +967,11 @@ ggplot(individus, aes(x = Axis1, y = Axis2, color = classe_euclidean)) +
   ) +
   theme_minimal()
 ```
+La première classification (selon la méthode phi2) oppose les classes selon les deux dimensions. On voit la classe la plus fournie regroupée au centre des axes, c'est-à-dire avec des unités statistiques qui sont homogènes dans leurs pratiques. Puis les deux classes suivantes, étendent la classe 3 vers la partie en haut à droite du graphique, c'est-à-dire vers les critères économiques.
+
+La deuxième classification a deux classes différentes.
+
+Finalement, on retient la classification utilisant la distance euclicienne et la méthode de Ward appliquée au carré des distances.
+
+# CONCLUSION
+Cette note méthodologique a pour but de reprendre les analyses menées en 2022/2023 lors de mon mémoire de master 1 Sociologie Quantitative et Démographie. D'un côté, j'ai corrigé des erreurs dans le traitement des données et la catégorisation, qui avaient conduit à oublier des individus pour l'ACM et la CAH. D'un autre, j'ai approfondit la classification ascendante hiérarchique réalisée, pour préciser plus sérieusement la distance utilisée et la méthode d'agrégation en comparant 3 CAH différentes pour identifier la plus appropriée statistiquement et sociologiquement. Même si les résultats n'ont pas changé drastiquement, il m'a semblé primordial de réaliser ce travail afin de porter un regard critique sur mon premier travail de recherche utilisant des méthodes quantitatives.
