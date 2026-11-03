@@ -30,7 +30,10 @@ library(cluster)
 library(TraMineR)
 library(WeightedCluster)
 library(GGally)
-library(factoextra)
+library(mclust)
+library(purrr)
+library(tibble)
+library(gt)
 ```
 
 J’ai découvert R au deuxième semestre de l’année 2022-2023 à l’occasion du cours de « Visualisation des données à l’aide du logiciel R » de Baptiste Coulmont à l’ENS Paris-Saclay, ce qui équivaut à un niveau L3. En Master 1 Sociologie Quantitative et Démographie, l’année suivante, toutes les méthodes statistiques présentées en cours étaient illustrées sur R, afin que les étudiants gagnent en autonomie sur le logiciel. De plus, j’ai effectué un stage au CREST à partir du mois de janvier 2024, auprès de Léa Pessin, avec pour objectif d’actualiser un travail de recherche avec de nouvelles vagues de données et traduire, si le terme est bien choisi, le code de Stata vers R. Le mémoire constitue donc le premier travail en autonomie, d'envergure, en utilisant R, qui plus est avec mes propres données.
@@ -73,6 +76,7 @@ donnees_preparees <- donnees_preparees %>%
 ```
 
 ## Traitement
+
 ```{r}
 #Taille
 donnees_preparees <- donnees_preparees %>%
@@ -344,6 +348,7 @@ donnees_preparees$diff_eco_rec <- donnees_preparees$diff_eco %>%
 
 ## Catégorisation
 Après le recodage des variables, je réalise des catégorisations des variables suivantes : **ca, nb_salaries, taille**.
+
 ```{r}
 ###CATEGORISATION
 
@@ -405,11 +410,14 @@ donnees_preparees <- donnees_preparees %>%
                                 "Entre 100 et 199 m2",
                                 "Plus de 200 m2"))
 ```
+
 Cette phase de recodage des variables avait produit quelques bêtises lors de mon master 1, **si bien que 7 unités statistiques s'étaient perdues**, alors qu'elles auraient dû être incluses dans la suite des analyses. Il était donc primordial de reprendre le code pour poser un regard critique, plus de 3 ans après, sur mon premier travail de recherche, et cela montre par la même occasion que mon regard s'est aiguisé tant dans la maîtrise des outils que dans la recherche d'une démarche plus honnête et rigoureuse. Néanmoins, le jeu de données ayant changé, il convient de conduire à nouveau les analyses pour voir si cela a pu avoir un réel effet sur les résultats présentés dans le mémoire. 
 
 # ANALYSE STATISTIQUE
 
 ## Analyse des correspondances multiples (ACM)
+
+L'ACM est réalisée avec le package **ade4**.
 
 ```{r}
 d <- donnees_preparees %>%
@@ -450,13 +458,29 @@ acm <- dudi.acm(df = d, scannf = FALSE, nf = 5)
 ```
 
 ```{r}
-# Histogramme des valeurs propres
-fviz_eig(acm,
-         barfill = "royalblue",
-         barcolor = "black",
-         linecolor = "red",
-         title = "Histogramme des valeurs propres",
-         ylab = "Pourcentage de la variance expliquée")
+# Pourcentages d'inertie expliquée
+inertie <- acm$eig / sum(acm$eig) * 100
+
+# Histogramme
+barres <- barplot(
+  inertie,
+  names.arg = seq_along(inertie),
+  col = "royalblue",
+  border = "black",
+  main = "Histogramme des valeurs propres",
+  ylab = "Pourcentage de l'inertie expliquée",
+  xlab = "Axes factoriels"
+)
+
+# Courbe reliant les valeurs
+lines(
+  x = barres,
+  y = inertie,
+  type = "b",
+  col = "red",
+  lwd = 2,
+  pch = 19
+)
 ```
 
 ```{r}
@@ -465,26 +489,50 @@ s.corcircle(acm$co, 1, 2, clabel = 0.5)
 ```
 
 ```{r}
-# Contributions des variables aux axes
-fviz_contrib(acm, 
-             choice = "var", 
-             axes = 1,
-             fill = "royalblue",
-             color = "black",
-             title = "Histogramme des contributions à la dimension 1")
-fviz_contrib(acm, 
-             choice = "var", 
-             axes = 2,
-             fill = "royalblue",
-             color = "black",
-             title = "Histogramme des contributions à la dimension 2")
-fviz_contrib(acm, 
-             choice = "var", 
-             axes = 3,
-             fill = "royalblue",
-             color = "black",
-             title = "Histogramme des contributions à la dimension 3")
+# Fonction pour représenter les contributions
+graph_contrib <- function(acm, axe) {
+
+  # Calcul des contributions des modalités
+  contrib_modalites <- acm$cw * acm$co[, axe]^2 / acm$eig[axe] * 100
+
+  # Classement décroissant
+  contrib_modalites <- sort(contrib_modalites, decreasing = TRUE)
+
+  # Marges du graphique
+  par(mar = c(12, 4, 4, 2))
+
+  # Histogramme
+  barplot(
+    contrib_modalites,
+    names.arg = names(contrib_modalites),
+    las = 2,
+    col = "royalblue",
+    border = "black",
+    main = paste("Contributions des modalités à la dimension", axe),
+    ylab = "Contribution (%)",
+    cex.names = 0.5,
+    space = 0.2
+  )
+
+  # Seuil moyen de contribution
+  abline(
+    h = 100 / length(contrib_modalites),
+    col = "red",
+    lty = 2,
+    lwd = 2
+  )
+}
+
+# Graphique de l'axe 1
+graph_contrib(acm, 1)
+
+# Graphique de l'axe 2
+graph_contrib(acm, 2)
+
+# Graphique de l'axe 3
+graph_contrib(acm, 3)
 ```
+Malgré l'arrivée de 7 nouvelles unités, les contributions des modalités aux axes n'ont pas bougé par rapport aux graphiques fournis p. 102 du mémoire.
 
 ```{r}
 
@@ -527,6 +575,7 @@ ggplot(modalites, aes(x = Comp1, y = Comp3, label = modalite)) +
   ) +
   theme_minimal()
 ```
+De la même manière, l'espace des modalités n'a pas bougé, **ce qui maintient les interprétations et conclusions réalisées dans le mémoire**. En effet, les pratiques des libraires sont homogènes tant dans l'utilisation des outils numériques et informatiques que dans la connaissance des indicateurs comptables propres à leur profession, néanmoins les écarts à cette norme sont classants, comme le fait de ne pas connaître le montant sur son compte en banque, ou à l'inverse de connaître sa rentabilité au mètre carré.
 
 ```{r}
 
@@ -562,17 +611,17 @@ ggplot(individus, aes(x = Axis1, y = Axis3)) +
 
 Dans cette sous-partie, je reprends l'analyse qui constitue le coeur du chapitre 5 et se fonde sur une CAH. *Premier problème* : dans le mémoire, j'écris que j'utilise *"la méthode de Ward"*, ce qui ne veut rien dire sans préciser ni la nature des variables ni la distance choisie. *Deuxième problème* : dans le code, je calcule la cah avec la distance euclidienne, mais la nature des variables, à savoir 21 binaires et 3 catégorielles, rend impossible son utilisation et la fonction bascule sur la distance de Gower, comme il était indiqué dans un *Warning message*.
 
-Ainsi, je présente **trois** méthodes de classification différentes :
+La CAH permet notamment de projeter les classes construites sur l'espace de l'ACM.
+
+Ainsi, avec l'appui du guide-R de Joseph Larmarange (https://larmarange.github.io/guide-R/analyses_avancees/classification-ascendante-hierarchique.html), je présente **trois** méthodes de classification différentes :
 - 1) distance phi2 et méthode de Ward au carré des distances (Ward.D2)
 - 2) distance de Gower et méthode *average*
 - 3) distance euclidienne et méthode Ward.D2
 
+### Méthode : PHI2
 
+Cette méthode utilise les distances calculées lors de l'ACM et construit le dendrogramme à l'aide de la méthode de Ward sur le carré des distances.
 ```{r}
-#########
-## METHODE : PHI2
-#########
-
 distance_phi2 <- ade4::dist.dudi(acm)
 
 arbre_phi2 <- hclust(
@@ -580,13 +629,20 @@ arbre_phi2 <- hclust(
   method = "ward.D2"
 )
 
-fviz_dend(
+plot(
   arbre_phi2,
-  k = 2,
-  rect = TRUE,
-  show_labels = FALSE
-) +
-  ggtitle("CAH – Distance du Phi²")
+  labels = FALSE,
+  main = "CAH – Distance du Phi²",
+  xlab = "",
+  sub = "",
+  hang = -1
+)
+
+rect.hclust(
+  arbre_phi2,
+  k = 3,
+  border = c("red", "blue", "green")
+)
 
 inertie_phi2 <- sort(arbre_phi2$height, decreasing = TRUE)
 plot(inertie_phi2[1:20], type = "s", xlab = "Nombre de classes", ylab = "Inertie")
@@ -598,12 +654,20 @@ plot(wardRange_phi2,
      norm = "zscore", 
      main = "Indicateurs de découpage des classes du dendrogramme pour phi2")
 ```
+```{r}
+groupes_phi2 <- cutree(arbre_phi2, k = 3)
+d1_phi2 <- d %>%
+  mutate(typo = factor(groupes_phi2))
+table(d1_phi2$typo)
+```
+
+Les indicateurs de découpage des classes indiquent un coude assez net au niveau de **k=3**, et la distribution des effectifs par classe semble correcte, quoique la classe 3 regroupe beaucoup d'unités.
+
+### Méthode : GOWER
+
+La distance de Gower propose de mesurer la similarité de deux unités en calculant une distance entre deux individus à partir de leurs points communs dans les variables considérées.
 
 ```{r}
-#########
-## METHODE : GOWER
-#########
-
 distance_gower <- daisy(
   d,
   metric = "gower"
@@ -614,13 +678,20 @@ arbre_gower <- hclust(
   method = "average"
 )
 
-fviz_dend(
+plot(
+  arbre_gower,
+  labels = FALSE,
+  main = "CAH – Distance de Gower",
+  xlab = "",
+  sub = "",
+  hang = -1
+)
+
+rect.hclust(
   arbre_gower,
   k = 2,
-  rect = FALSE,
-  show_labels = FALSE
-) +
-  ggtitle("CAH – Distance de Gower")
+  border = c("red", "blue")
+)
 
 inertie_gower <- sort(arbre_gower$height, decreasing = TRUE)
 plot(inertie_gower[1:20], type = "s", xlab = "Nombre de classes", ylab = "Inertie")
@@ -632,12 +703,20 @@ plot(wardRange_gower,
      norm = "zscore", 
      main = "Indicateurs de découpage des classes du dendrogramme pour Gower")
 ```
+```{r}
+groupes_gower <- cutree(arbre_gower, k = 2)
+d1_gower <- d %>%
+  mutate(typo = factor(groupes_gower))
+table(d1_gower$typo)
+```
+
+Pour cette classification, un découpage en **k=2** classes est préférable, car les groupes sont plus fournis de cette manière.
+
+### Méthode : EUCLIDEAN
+
+Pour cette méthode, il faut utiliser des variables quantitatives, donc les 21 variables boléennes deviennent des variables binaires (0/1) et les 3 variables catégorielles sont incluses dans leur forme initiale, c'est-à-dire numérique. Toutes les variables sont **standardisées**.
 
 ```{r}
-#########
-## METHODE : EUCLIDEAN
-#########
-
 # Il faut utiliser des variables quantitatives, donc on reprend les variables avant catégorisation
 d_euclidean <- donnees_preparees %>%
   select(
@@ -677,13 +756,20 @@ arbre_euclidean <- hclust(
   method = "ward.D2"
 )
 
-fviz_dend(
+plot(
   arbre_euclidean,
-  k = 3,
-  rect = FALSE,
-  show_labels = FALSE
-) +
-  ggtitle("CAH – Distance Euclidienne")
+  labels = FALSE,
+  main = "CAH – Distance Euclidienne",
+  xlab = "",
+  sub = "",
+  hang = -1
+)
+
+rect.hclust(
+  arbre_euclidean,
+  k = 2,
+  border = c("red", "blue")
+)
 
 inertie_euclidean <- sort(arbre_euclidean$height, decreasing = TRUE)
 plot(inertie_euclidean[1:20], type = "s", xlab = "Nombre de classes", ylab = "Inertie")
@@ -695,17 +781,123 @@ plot(wardRange_euclidean,
      norm = "zscore", 
      main = "Indicateurs de découpage des classes du dendrogramme pour Euclidienne")
 ```
+```{r}
+groupes_euclidean <- cutree(arbre_euclidean, k = 2)
+d1_euclidean <- d_euclidean %>%
+  mutate(typo = factor(groupes_euclidean))
+table(d1_euclidean$typo)
+```
 
-## Projection des classes sur l'ACM
+Pour cette classification, un découpage en **k=2** classes est préférable, car les groupes sont plus fournis de cette manière, et on voit un coude à ce niveau-là.
+
+Déja, les trois méthodes produisent des résultats assez différents avec plutôt 2 classes, donc il faut impérativement les comparer pour retenir la meilleure classification selon l'homogénéité intra-classe et l'hétérogénéité inter-classe, ainsi que l'interprétabilité sociologique des classes.
+
+### Tableaux des classes
+
+C'est pourquoi, je regarde la répartition des modalités pour chaque typologie afin d'identifier des profils clairs. Pour cela, on utilise le package **GGally** pour visualiser à l'aide du Chi2 les modalités sur (bleu) et sous-représentées (rouge) dans les classes.
 
 ```{r}
-groupes_phi2_2 <- cutree(arbre_phi2, k = 2)
-groupes_gower_2<- cutree(arbre_gower, k = 2)
-groupes_euclidean_3 <- cutree(arbre_euclidean, k = 3)
 
-individus$classe_phi2 <- factor(groupes_phi2_2)
-individus$classe_gower <- factor(groupes_gower_2)
-individus$classe_euclidean <- factor(groupes_euclidean_3)
+afficher_ggtable <- function(df, colonnes) {
+  ggtable(
+    df,
+    columnsX = "typo",
+    columnsY = colonnes,
+    cells = "col.prop",
+    fill = "std.resid"
+  ) +
+    labs(fill = "Résidus standardisés du Chi²") +
+    theme(legend.position = "bottom")
+}
+
+afficher_ggtable(d1_phi2, names(d1_phi2)[1:6])
+afficher_ggtable(d1_phi2, names(d1_phi2)[7:11])
+afficher_ggtable(d1_phi2, names(d1_phi2)[12:14])
+afficher_ggtable(d1_phi2, names(d1_phi2)[15:19])
+afficher_ggtable(d1_phi2, names(d1_phi2)[20:24])
+```
+
+On voit tout de suite que les individus ayant un chiffre daffaires supérieur à 1,2 million d'euros sont tous regroupés dans la deuxième, ce qui est le critère déterminant de la création des classes. Ces librairies sont aussi celles avec le plus de salariés et la plus grande surface commerciale. Cela n'est pas étonnant, car ce sont les trois modalités qui contribuent le plus à la formation des axes de l'ACM et que la distance choisie ici s'appuie sur cette ACM.
+
+```{r}
+afficher_ggtable(d1_gower, names(d1_gower)[1:6])
+afficher_ggtable(d1_gower, names(d1_gower)[7:11])
+afficher_ggtable(d1_gower, names(d1_gower)[12:14])
+afficher_ggtable(d1_gower, names(d1_gower)[15:19])
+afficher_ggtable(d1_gower, names(d1_gower)[20:24])
+```
+
+Cette deuxième typologie distingue 2 classes, et ces classes ne sont pas uniquement formées sur les variables économiques, même si la classe 1 a une surreprésentation des unités avec un gros chiffre d'affaires et et la classe 2 une sousreprésentation de ces unités. Au niveau des pratiques quotidiennes, la classe 1 a une surreprésentation de l'usage de l'étiqueteuse, des groupes de discussion entre libraires, de l'observatoire des librairies, et au niveau des indicateurs comptables, la classe 1 connaît plus souvent : le taux de retour, le nombre de passage en caisse, le chiffre d'affaires par semaine, le taux de remise et globalement connaît plus souvent tous les indicateurs comptables
+
+Pour la dernière méthode, il faut calculer des moyennes des variables par groupe car elles sont numériques.
+```{r}
+tester_quantitatives <- function(df) {
+
+  variables <- df %>%
+    select(where(is.numeric)) %>%
+    names()
+
+  map_dfr(variables, function(var) {
+
+    test <- kruskal.test(
+      as.formula(paste0("`", var, "` ~ typo")),
+      data = df
+    )
+
+    tibble(
+      variable = var,
+      statistique = round(unname(test$statistic), 2),
+      p_value = round(test$p.value, 4)
+    )
+  }) %>%
+    mutate(
+      significatif = p_value < 0.05
+    ) %>%
+    arrange(desc(statistique))
+}
+
+resultats_tests <- tester_quantitatives(d1_euclidean)
+
+# Variables significatives
+variables_significatives <- resultats_tests %>%
+  filter(significatif) %>%
+  pull(variable)
+
+moyennes_euclidiennes <- d1_euclidean %>%
+  group_by(typo) %>%
+  summarise(
+    across(
+      where(is.numeric),
+      ~ round(mean(.x, na.rm = TRUE), digits = 2)
+    ),
+    .groups = "drop"
+  )
+
+moyennes_euclidiennes %>%
+  gt() %>%
+  tab_style(
+    style = list(
+      cell_fill(color = "#D9EAD3"),
+      cell_text(color = "#274E13", weight = "bold")
+    ),
+    locations = cells_body(
+      columns = all_of(variables_significatives)
+    )
+  ) %>%
+  tab_header(
+    title = "Moyennes par classe – CAH euclidienne",
+    subtitle = "En vert : variables présentant une différence significative entre les classes"
+  )
+```
+
+Améliorer le rendu visuel
+
+### Projection des classes sur l'ACM
+
+```{r}
+individus$classe_phi2 <- factor(groupes_phi2)
+individus$classe_gower <- factor(groupes_gower)
+individus$classe_euclidean <- factor(groupes_euclidean)
 ```
 
 ```{r}
@@ -714,7 +906,8 @@ ggplot(individus, aes(x = Axis1, y = Axis2, color = classe_phi2)) +
   scale_color_manual(
     values = c(
       "1" = "red",
-      "2" = "blue"
+      "2" = "blue",
+      "3" = "green"
     )
   )  +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey70") +
@@ -750,8 +943,7 @@ ggplot(individus, aes(x = Axis1, y = Axis2, color = classe_euclidean)) +
   scale_color_manual(
     values = c(
       "1" = "red",
-      "2" = "blue",
-      "3" = "green"
+      "2" = "blue"
     )
   ) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey70") +
@@ -763,86 +955,4 @@ ggplot(individus, aes(x = Axis1, y = Axis2, color = classe_euclidean)) +
     color = "Classe"
   ) +
   theme_minimal()
-```
-## Tableaux des classes
-```{r}
-d1_phi2 <- d %>%
-  mutate(typo = factor(groupes_phi2_2))
-
-d1_gower <- d %>%
-  mutate(typo = factor(groupes_gower_2))
-
-d1_euclidean <- d_euclidean %>%
-  mutate(typo = factor(groupes_euclidean_3))
-
-table(d1_phi2$typo)
-table(d1_gower$typo)
-table(d1_euclidean$typo)
-```
-
-```{r}
-ggtable(
-  d1_phi2,
-  columnsX = "typo",
-  columnsY = names(d1_phi2)[1:8],
-  cells = "col.prop",
-  fill = "std.resid") +
-  labs(fill = "Résidus standardisés du Chi²") +
-  theme(legend.position = "bottom")
-ggtable(
-  d1_phi2,
-  columnsX = "typo",
-  columnsY = names(d1_phi2)[9:16],
-  cells = "col.prop",
-  fill = "std.resid") +
-  labs(fill = "Résidus standardisés du Chi²") +
-  theme(legend.position = "bottom")
-ggtable(
-  d1_phi2,
-  columnsX = "typo",
-  columnsY = names(d1_phi2)[17:24],
-  cells = "col.prop",
-  fill = "std.resid") +
-  labs(fill = "Résidus standardisés du Chi²") +
-  theme(legend.position = "bottom")
-```
-
-```{r}
-ggtable(
-  d1_gower,
-  columnsX = "typo",
-  columnsY = names(d1_gower)[1:8],
-  cells = "col.prop",
-  fill = "std.resid") +
-  labs(fill = "Résidus standardisés du Chi²") +
-  theme(legend.position = "bottom")
-ggtable(
-  d1_gower,
-  columnsX = "typo",
-  columnsY = names(d1_gower)[9:16],
-  cells = "col.prop",
-  fill = "std.resid") +
-  labs(fill = "Résidus standardisés du Chi²") +
-  theme(legend.position = "bottom")
-ggtable(
-  d1_gower,
-  columnsX = "typo",
-  columnsY = names(d1_gower)[17:24],
-  cells = "col.prop",
-  fill = "std.resid") +
-  labs(fill = "Résidus standardisés du Chi²") +
-  theme(legend.position = "bottom")
-```
-
-```{r}
-moyennes_euclidiennes <- d1_euclidean %>%
-  group_by(typo) %>%
-  summarise(
-    across(
-      where(is.numeric),
-      ~ mean(.x, na.rm = TRUE)
-    ),
-    .groups = "drop"
-  )
-moyennes_euclidiennes
 ```
