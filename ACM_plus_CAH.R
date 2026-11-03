@@ -1,7 +1,4 @@
-library(GDAtools)
-library(factoextra)
 library(ade4)
-library(FactoMineR)
 library(ggplot2)
 library(ggrepel)
 library(cluster)
@@ -182,7 +179,6 @@ plot(wardRange_phi2,
      norm = "zscore", 
      main = "Indicateurs de découpage des classes du dendrogramme pour phi2")
 
-
 #########
 ## METHODE : GOWER
 #########
@@ -347,10 +343,6 @@ ggplot(individus, aes(x = Axis1, y = Axis2, color = classe_euclidean)) +
 # 4. TABLEAUX DE MODALITÉS PAR CLASSE
 # ==================================================
 
-table(d1_phi2$typo)
-table(d1_gower$typo)
-table(d1_euclidean$typo)
-
 d1_phi2 <- d %>%
   mutate(typo = factor(groupes_phi2_2))
 
@@ -359,6 +351,10 @@ d1_gower <- d %>%
 
 d1_euclidean <- d_euclidean %>%
   mutate(typo = factor(groupes_euclidean_3))
+
+table(d1_phi2$typo)
+table(d1_gower$typo)
+table(d1_euclidean$typo)
 
 # Tableaux de répartitions
 ggtable(

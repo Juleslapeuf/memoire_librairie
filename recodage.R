@@ -54,9 +54,11 @@ donnees_preparees <- doc_quest %>%
 donnees_preparees <- donnees_preparees %>%
   filter(type == "Généraliste")
 
-#Maintenant, on passe au recodage à la main de certaines réponses. Soit pour harmoniser les modalités 
-#(quand il y a un espace au milieu d'un nombre à 6 chiffres, quand le signe € était ajouté, ou un "." 
-#ou un "k", "HT"...)...
+# RECODAGE
+
+#Taille
+donnees_preparees <- donnees_preparees %>%
+  mutate(taille_reco = as.numeric(sub("\\D*(\\d+).*", "\\1", taille)))
 
 #Année de naissance
 donnees_preparees <- donnees_preparees %>%
@@ -134,7 +136,6 @@ donnees_preparees$sal_tpl_rec <- donnees_preparees$sal_tpl %>%
     "1" = "1+1",
     "2" = "2 et 2 co gérantes ",
     "0" = "2 gérents non salaries",
-    "1" = "3 (dont 2 alternants)",
     "3" = "3 salariés + 1 gérante",
     "3" = "3,8"
   ) %>%
@@ -157,10 +158,6 @@ donnees_preparees$sal_tpa_rec <- donnees_preparees$sal_tpa %>%
 #Somme = Nombre total de salariés
 donnees_preparees <- donnees_preparees %>%
   mutate(nb_salaries = sal_tpl_rec + sal_tpa_rec)
-
-#Taille
-donnees_preparees <- donnees_preparees %>%
-  mutate(taille_reco = as.numeric(sub("\\D*(\\d+).*", "\\1", taille)))
 
 donnees_preparees[304, 7] <- "200000"
 
@@ -377,7 +374,6 @@ donnees_preparees$diff_eco_rec <- donnees_preparees$diff_eco %>%
   as.numeric()
 
 ###CATEGORISATION
-
 #CA
 
 donnees_preparees <- donnees_preparees %>%
@@ -492,12 +488,3 @@ donnees_preparees <- donnees_preparees %>%
                                 "Moins de 100 m2",
                                 "Entre 100 et 199 m2",
                                 "Plus de 200 m2"))
-
-#Rentabilité au m2
-donnees_preparees <- donnees_preparees %>%
-  mutate(rentabilité = ca_rec/taille_reco)
-
-
-#Corrélation
-cor(donnees_preparees$taille_reco, donnees_preparees$ca_rec, use = "pairwise.complete.obs")
-cor(donnees_preparees$sitven, donnees_preparees$portasso, use = "pairwise.complete.obs")
