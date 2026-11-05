@@ -15,9 +15,11 @@ execute:
   message: false
 ---
 
-J'analyse les réponses aux questions relatives aux niveaux d'inquiétude avant, pendant et après la pandémie sur une échelle de 1 à 10, qui n'avaient pas fait partie du travail conduit pour l'écriture du mémoire.
+J'analyse les réponses aux questions relatives aux niveaux d'inquiétude avant, pendant et après la pandémie sur une échelle de 1 à 10, qui n'avaient pas fait partie du travail conduit pour l'écriture du mémoire. Les questions sont formulées de la façon suivante : *"Sur une échelle de 1 à 10, [période], étiez-vous inquiet pour l’avenir de votre commerce ?* en précisant que 10 est le niveau maximum d'inquiétude.
+
 ```{r}
 library(tidyverse)
+library(ggplot2)
 ```
 
 ```{r}
@@ -48,10 +50,9 @@ df_inq <- df_inq %>%
 
 Je refais les recodages et catégorisations
 ```{r}
-#Taille
+#TAILLE
 df_inq <- df_inq %>%
   mutate(taille_reco = as.numeric(sub("\\D*(\\d+).*", "\\1", taille)))
-
 
 #SALARIES
 df_inq[1, 2] <- "0"
@@ -110,7 +111,7 @@ df_inq <- df_inq %>%
 
 df_inq[304, 4] <- "200000"
 
-#Chiffre d'affaires
+#CHIFFRE D'AFFAIRES
 df_inq <- df_inq %>%
   mutate(
     ca_brut = str_to_lower(str_trim(ca)),
@@ -190,7 +191,6 @@ df_inq$diff_eco_rec <- df_inq$diff_eco %>%
   as.numeric()
 
 ###CATEGORISATION
-
 #CA
 df_inq <- df_inq %>%
   mutate(
@@ -250,11 +250,58 @@ df_inq <- df_inq %>%
                                 "Plus de 200 m2"))
 ```
 
+On trace les graphiques de l'évolution du niveau moyen d'inquiétude avant, pendant et après la pandémie pour toutes les librairies, puis en ventilant par la catégorie de chiffres d'affaires et celle du nombre de salariés.
+
 ```{r}
+
+# MOYENNES GLOBALES
+moyennes <- df_inq %>% 
+  summarise(
+    Avant = mean(inq_av, na.rm = TRUE),
+    Pandémie = mean(inq_p, na.rm = TRUE),
+    Après = mean(inq_ap, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(
+    cols = c(Avant, Pandémie, Après),
+    names_to = "Période",
+    values_to = "Moyenne"
+  )
+
+moyennes$Période <- factor(
+  moyennes$Période,
+  levels = c("Avant", "Pandémie", "Après")
+)
+
+ggplot(moyennes,
+       aes(x = Période, y = Moyenne, group = 1)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 3.5) +
+  geom_text(
+    aes(label = round(Moyenne, 2)),
+    vjust = -1,
+    size = 4
+  ) +
+  scale_y_continuous(
+    limits = c(1, 10),
+    breaks = 1:10
+  ) +
+  labs(
+    title = "Évolution des scores d'inquiétude",
+    x = NULL,
+    y = "Score moyen INQ"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", size = 15),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  )
+
+# MOYENNES PAR CHIFFRE D'AFFAIRES
 df_inq_ca <- df_inq %>%
   drop_na(ca_rec_rec)
 
-# MOYENNE PAR CHIFFRE D'AFFAIRES
 moyennes_ca <- df_inq_ca %>%
   group_by(ca_rec_rec) %>% 
   summarise(
@@ -294,7 +341,7 @@ ggplot(moyennes_ca,
     legend.position = "bottom"
   )
 
-# MOYENNE PAR NOMBRE DE SALARIES
+# MOYENNES PAR NOMBRE DE SALARIES
 df_inq_salaries <- df_inq %>%
   drop_na(nb_salaries_)
 
@@ -336,49 +383,5 @@ ggplot(moyennes_salaries,
     panel.grid.minor = element_blank(),
     legend.position = "bottom"
   )
-
-# MOYENNE PAR DIFF_ECO
-
-df_inq_diff_eco <- df_inq %>%
-  drop_na(diff_eco)
-
-moyennes_diff_eco <- df_inq_diff_eco %>%
-  group_by(diff_eco) %>% 
-  summarise(
-    Avant = mean(inq_av, na.rm = TRUE),
-    Pandémie = mean(inq_p, na.rm = TRUE),
-    Après = mean(inq_ap, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  pivot_longer(
-    cols = c(Avant, Pandémie, Après),
-    names_to = "Période",
-    values_to = "Moyenne"
-  )
-
-moyennes_diff_eco$Période <- factor(
-  moyennes_diff_eco$Période,
-  levels = c("Avant", "Pandémie", "Après")
-)
-
-ggplot(moyennes_diff_eco,
-       aes(x = Période, y = Moyenne,
-           color = diff_eco,
-           group = diff_eco)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(size = 3.5) +
-  scale_y_continuous(limits = c(1, 10), breaks = 1:10) +
-  labs(
-    title = "Évolution des scores d'inquiétude selon que la lib a déja connu des diff éco",
-    x = NULL,
-    y = "Score moyen INQ",
-    color = "Difficultés économiques"
-  ) +
-  theme_minimal(base_size = 13) +
-  theme(
-    plot.title = element_text(face = "bold", size = 15),
-    panel.grid.minor = element_blank(),
-    legend.position = "bottom"
-  )
 ```
-
+Pour analyser ces données, sans les rapprocher du sujet général du mémoire, nous nous appuyons sur deux articles analysant le niveau de confiance des entrepreneurs pendant la pandémie.

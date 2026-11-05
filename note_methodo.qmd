@@ -15,34 +15,35 @@ execute:
   message: false
 ---
 
-# DONNEES
+J’ai découvert R au deuxième semestre de l’année 2022-2023 à l’occasion du cours de « Visualisation des données à l’aide du logiciel R » de Baptiste Coulmont à l’ENS Paris-Saclay, ce qui équivaut à un niveau L3. En Master 1 Sociologie Quantitative et Démographie, l’année suivante, toutes les méthodes statistiques présentées en cours étaient illustrées sur R, afin que les étudiants gagnent en autonomie sur le logiciel. De plus, j’ai effectué un stage au CREST à partir du mois de janvier 2024, auprès de Léa Pessin, avec pour objectif d’actualiser un travail de recherche avec de nouvelles vagues de données et traduire, si le terme est bien choisi, le code de Stata vers R. Le mémoire constitue donc le premier travail en autonomie, d'envergure, en utilisant R, qui plus est avec mes propres données.
+
+Cette note méthodologique a pour but de revenir, 3 ans après, sur mon premier travail de recherche quantitative, principalement les **chapitres 4 et 5** du mémoire, qui est accessible en pdf dans le *repository*. La première partie revient sur le **traitement des données sur R** et la deuxième partie sur **l'analyse statistique** présentée dans le mémoire.
 
 ```{r}
 #| message: false
 #| warning: false
 
 library(tidyverse)
-library(stringi)
 library(ade4)
 library(ggplot2)
 library(ggrepel)
 library(cluster)
-library(TraMineR)
-library(WeightedCluster)
 library(GGally)
-library(mclust)
+library(WeightedCluster)
 library(purrr)
 library(tibble)
 library(gt)
 ```
 
-J’ai découvert R au deuxième semestre de l’année 2022-2023 à l’occasion du cours de « Visualisation des données à l’aide du logiciel R » de Baptiste Coulmont à l’ENS Paris-Saclay, ce qui équivaut à un niveau L3. En Master 1 Sociologie Quantitative et Démographie, l’année suivante, toutes les méthodes statistiques présentées en cours étaient illustrées sur R, afin que les étudiants gagnent en autonomie sur le logiciel. De plus, j’ai effectué un stage au CREST à partir du mois de janvier 2024, auprès de Léa Pessin, avec pour objectif d’actualiser un travail de recherche avec de nouvelles vagues de données et traduire, si le terme est bien choisi, le code de Stata vers R. Le mémoire constitue donc le premier travail en autonomie, d'envergure, en utilisant R, qui plus est avec mes propres données.
+# I/ TRAITEMENT DES DONNEES
 
-La collecte de données par questionnaire s’accompagne nécessairement d’un travail de nettoyage et de traitement important afin de prendre connaissance de la base de données et relever, d’un côté, les erreurs de saisie et, de l’autre, les situations sociales qui ne rentrent pas dans la catégorisation proposée, et cela même si une phase de test du questionnaire a été réalisée au début pour ajuster certaines questions.
+Le traitement de données par questionnaire consiste en une phase de **collecte**, puis de **nettoyage** et de la **structuration ou catégorisation** dans un fichier exploitable pour l'analyse.
+
+## i/ Collecte
+
+La collecte des données s'est déroulée de janvier à mars 2023, comme expliqué dans l'introduction du mémoire, et le questionnaire devait cibler les gérant.es de librairie généraliste indépendante. Cependant, je me suis rapidement rendu compte qu'il arrivait que des salariés répondent au questionnaire avec leurs informations personnelles, ce qui a rendu inexploitable ces données, si bien que je n'ai pu exploiter que les données relatives au magasin, en considérant, à la suite de mes observations sur le terrain, que les pratiques numériques et la connaissance des indicateurs comptables font partie d'une culture d'entreprise et qu'en ce sens, les données sont exploitables.
 
 Le bloc de code suivant permet de charger le jeu de données, que j'ai mis en accès public après suppression des données sensibles, de manière à ce que les librairies ne soient pas identifiables. J'en profite pour donner des noms à mes variables et filtrer sur ma population d'intérêt, c'est-à-dire les librairies généralistes (306/337).
-
-## Collecte
 
 ```{r}
 doc_quest <- read.csv2(
@@ -75,7 +76,9 @@ donnees_preparees <- donnees_preparees %>%
   filter(type == "Généraliste")
 ```
 
-## Traitement
+## ii/ Nettoyage
+
+Le nettoyage a pour but de relever, d’un côté, **les erreurs de saisie** et, de l’autre, **les situations sociales qui ne rentrent pas dans la catégorisation proposée**, et cela même si une phase de test du questionnaire avait été réalisée au début pour ajuster certaines questions.
 
 ```{r}
 #Taille
@@ -83,7 +86,7 @@ donnees_preparees <- donnees_preparees %>%
   mutate(taille_reco = as.numeric(sub("\\D*(\\d+).*", "\\1", taille)))
 ```
 
-La surface du magasin n'est pas difficile à recoder, car il suffit d'enlever les éventuels m2 qui s'étaient glissés pendant le remplissage. Le gros du travail réside dans les colonnes **sal_tpl** et **sal_tpa**, en particulier pour ne pas compter les gérant.es comme des salariés et pour compter les alternant.es et apprenti.es comme des salariés à temps partiel. Ainsi, les réponses obtenues ne sont pas que des valeurs numériques, mais j'essaye d'en assigner une dès qu'une information le permet. Par exemple, pour la réponse 0.85, j'assigne la valeur 0 à **sal_tpl** et la valeur +1 à **sal_tpa**, car je suppose qu'il s'agit d'une personne qui travaille 85% du temps.
+La *surface du magasin* n'est pas difficile à recoder, car il suffit d'enlever les éventuels m2 qui s'étaient glissés pendant le remplissage. Le gros du travail réside dans les colonnes **sal_tpl** et **sal_tpa**, en particulier pour ne pas compter les gérant.es comme des salariés et pour compter les alternant.es et apprenti.es comme des salariés à temps partiel. Ainsi, les réponses obtenues ne sont pas que des valeurs numériques, mais j'essaye d'en assigner une dès qu'une information le permet. Par exemple, pour la réponse 0.85, j'assigne la valeur 0 à **sal_tpl** et la valeur +1 à **sal_tpa**, car je suppose qu'il s'agit d'une personne qui travaille 85% du temps.
 
 ```{r}
 unique(donnees_preparees$sal_tpl)
@@ -151,9 +154,10 @@ donnees_preparees <- donnees_preparees %>%
   mutate(nb_salaries = sal_tpl_rec + sal_tpa_rec)
 ```
 
-Pour le chiffre d'affaires, il est souvent affaire d'espaces entre les centaines, de symboles d'unité monétaire ou de commentaires pour indiquer l'intervalle de temps ou la rondeur du chiffre. J'assigne une valeur car j'ai obtenu l'information à l'oral d'un libraire qui ne voulait pas l'écrire dans le questionnaire. Une fois les règles appliquées, je vérifie à la main tous les recodages pour être certain de n'avoir fait aucune erreur.
+Pour le *chiffre d'affaires*, il est souvent affaire d'espaces entre les centaines, de symboles d'unité monétaire ou de commentaires pour indiquer l'intervalle de temps ou la rondeur du chiffre.
+
 ```{r}
-donnees_preparees[304, 7] <- "200000"
+donnees_preparees[304, 7] <- "200000" # Information venant d'un libraire qui ne voulait pas écrire le CA dans le questionnaire mais me l'a dit au téléphone
 
 #Chiffre d'affaires
 donnees_preparees <- donnees_preparees %>%
@@ -346,8 +350,10 @@ donnees_preparees$diff_eco_rec <- donnees_preparees$diff_eco %>%
   as.numeric()
 ```
 
-## Catégorisation
-Après le recodage des variables, je réalise des catégorisations des variables suivantes : **ca, nb_salaries, taille**.
+A la fin du nettoyage, je vérifie chacune des lignes pour être certain de n'avoir oublié aucune librairie dans cette opération.
+
+## iii/ Catégorisation
+Après le nettoyage des variables, je réalise des catégorisations des variables suivantes : **ca, nb_salaries, taille**.
 
 ```{r}
 ###CATEGORISATION
@@ -411,13 +417,15 @@ donnees_preparees <- donnees_preparees %>%
                                 "Plus de 200 m2"))
 ```
 
-Cette phase de recodage des variables avait produit quelques bêtises lors de mon master 1, **si bien que 7 unités statistiques s'étaient perdues**, alors qu'elles auraient dû être incluses dans la suite des analyses. Il était donc primordial de reprendre le code pour poser un regard critique, plus de 3 ans après, sur mon premier travail de recherche, et cela montre par la même occasion que mon regard s'est aiguisé tant dans la maîtrise des outils que dans la recherche d'une démarche plus honnête et rigoureuse. Néanmoins, le jeu de données ayant changé, il convient de conduire à nouveau les analyses pour voir si cela a pu avoir un réel effet sur les résultats présentés dans le mémoire. 
+Le traitement des données avait, à l'époque du master 1, produit quelques bêtises au niveau de la phase de nettoyage, **si bien que 7 unités statistiques s'étaient perdues**, alors qu'elles auraient dû être incluses dans la suite des analyses. En effet, mes automatismes sur R étaient faibles comparés à ceux acquis après plus de 3 ans de pratique, et l'organisation du code ne respectait pas une logique efficace, si bien que je n'ai pas remarqué à l'époque que certaines lignes de code supprimaient à tort des individus.
 
-# ANALYSE STATISTIQUE
+Reprendre le code du traitement des données était primordial pour : **réorganiser** les informations contenues dans les scripts d'abord, **simplifier** ensuite et **traquer** les erreurs. Fort de ces 7 nouveaux individus, la partie suivante est consacrée à l'analyse statistique afin d'évaluer les changements de résultats éventuels et préciser un peu plus la méthodologie retenue.
 
-## Analyse des correspondances multiples (ACM)
+# II/ ANALYSE STATISTIQUE
 
-L'ACM est réalisée avec le package **ade4**.
+## i/ Analyse des correspondances multiples (ACM)
+
+L'ACM est réalisée avec le package **ade4**. J'utilise exactement les mêmes variables que dans le mémoire, et elles sont détaillées à l'annexe 4 (p. 100). Cette sous-partie produit les graphiques pour le chapitre 4.
 
 ```{r}
 d <- donnees_preparees %>%
@@ -485,8 +493,15 @@ lines(
 
 ```{r}
 # Cercle de corrélations
-s.corcircle(acm$co, 1, 2, clabel = 0.5)
+s.corcircle(
+  acm$co,
+  1, 2,
+  clabel = 0.5,
+  sub = "Cercle des corrélations – ACM",
+  csub = 1
+)
 ```
+
 
 ```{r}
 # Fonction pour représenter les contributions
@@ -532,7 +547,7 @@ graph_contrib(acm, 2)
 # Graphique de l'axe 3
 graph_contrib(acm, 3)
 ```
-Malgré l'arrivée de 7 nouvelles unités, les contributions des modalités aux axes n'ont pas bougé par rapport aux graphiques fournis p. 102 du mémoire.
+Malgré l'arrivée de 7 nouvelles unités, les graphiques précédents, à savoir l'histogramme des valeurs propres, le cercle des corrélations et les contributions des modalités aux axes n'ont pas bougé par rapport aux graphiques du mémoire (p. 102).
 
 ```{r}
 
@@ -575,7 +590,9 @@ ggplot(modalites, aes(x = Comp1, y = Comp3, label = modalite)) +
   ) +
   theme_minimal()
 ```
-De la même manière, l'espace des modalités n'a pas bougé, **ce qui maintient les interprétations et conclusions réalisées dans le mémoire**. En effet, les pratiques des libraires sont homogènes tant dans l'utilisation des outils numériques et informatiques que dans la connaissance des indicateurs comptables propres à leur profession, néanmoins les écarts à cette norme sont classants, comme le fait de ne pas connaître le montant sur son compte en banque, ou à l'inverse de connaître sa rentabilité au mètre carré.
+De la même manière, l'espace des modalités n'a pas bougé, **ce qui maintient les interprétations et conclusions réalisées dans le mémoire**. En effet, les pratiques des libraires sont homogènes tant dans l'utilisation des outils numériques et informatiques que dans la connaissance des indicateurs comptables propres à leur profession, néanmoins les écarts à cette norme sont classants, comme le fait de ne pas connaître le montant sur son compte en banque, ou à l'inverse de connaître sa rentabilité au mètre carré pour la projection sur les axes 1 et 2.
+
+On rajoute donc 7 individus à l'espace des individus statistiques, et la sous-partie suivante analyse cet espace.
 
 ```{r}
 
@@ -607,21 +624,23 @@ ggplot(individus, aes(x = Axis1, y = Axis3)) +
   theme_minimal()
 ```
 
-## Classification ascendante hiérarchique (CAH)
+## ii/ Classification ascendante hiérarchique (CAH)
 
-Dans cette sous-partie, je reprends l'analyse qui constitue le coeur du chapitre 5 et se fonde sur une CAH. *Premier problème* : dans le mémoire, j'écris que j'utilise *"la méthode de Ward"*, ce qui ne veut rien dire sans préciser ni la nature des variables ni la distance choisie. *Deuxième problème* : dans le code, je calcule la cah avec la distance euclidienne, mais la nature des variables, à savoir 21 binaires et 3 catégorielles, rend impossible son utilisation et la fonction bascule sur la distance de Gower, comme il était indiqué dans un *Warning message*.
+Dans cette sous-partie, je reprends l'analyse qui constitue le coeur du chapitre 5 et se fonde sur une CAH. **Premier problème** : dans le mémoire, j'écris que j'utilise *"la méthode de Ward"*, ce qui ne veut rien dire sans préciser ni la nature des variables ni la distance choisie. **Deuxième problème** : dans le code, je calcule la CAH avec la distance euclidienne, mais la nature des variables, à savoir 21 binaires et 3 catégorielles, rend impossible son utilisation et la fonction bascule sur la distance de Gower, comme il était indiqué dans un *Warning message*.
 
-La CAH permet notamment de projeter les classes construites sur l'espace de l'ACM.
+Un des intérêts de la CAH est de projeter les classes construites sur l'espace de l'ACM. Dans le mémoire, j'utilise une visualisation des classes avec des ellipses et des zones de chaleur, mais il me semble que cette visualisation est superflue considérant le nombre d'individus statistiques à disposition, donc la projection des classes ne sera réalisée qu'à l'aide de deux ou trois couleurs.
 
-Ainsi, avec l'appui du guide-R de Joseph Larmarange (https://larmarange.github.io/guide-R/analyses_avancees/classification-ascendante-hierarchique.html), je présente **trois** méthodes de classification différentes :
+Ainsi, avec l'appui du [guide-R](https://larmarange.github.io/guide-R/analyses_avancees/classification-ascendante-hierarchique.html) de Joseph Larmarange, je présente **trois** classification différentes :
 - 1) distance phi2 et méthode de Ward au carré des distances (Ward.D2)
 - 2) distance de Gower et méthode *average*
 - 3) distance euclidienne et méthode Ward.D2
 
-### Méthode : PHI2
+### 1) Méthode : PHI2
 
-Cette méthode utilise les distances calculées lors de l'ACM et construit le dendrogramme à l'aide de la méthode de Ward sur le carré des distances.
+Cette méthode utilise les distances calculées lors de l'ACM et construit le dendrogramme à l'aide de la méthode de Ward sur le carré des distances, c'est-à-dire en minimisant la variance intra-classe.
+
 ```{r}
+
 distance_phi2 <- ade4::dist.dudi(acm)
 
 arbre_phi2 <- hclust(
@@ -661,11 +680,11 @@ d1_phi2 <- d %>%
 table(d1_phi2$typo)
 ```
 
-Les indicateurs de découpage des classes indiquent un coude assez net au niveau de **k=3**, et la distribution des effectifs par classe semble correcte, quoique la classe 3 regroupe beaucoup d'unités.
+Les indicateurs de découpage des classes indiquent un coude  au niveau de **k=3**, et la distribution des effectifs par classe semble correcte, quoique la classe 3 regroupe beaucoup d'unités.
 
-### Méthode : GOWER
+### 2) Méthode : GOWER
 
-La distance de Gower propose de mesurer la similarité de deux unités en calculant une distance entre deux individus à partir de leurs points communs dans les variables considérées.
+La distance de Gower propose de mesurer la similarité de deux unités en calculant une distance entre deux individus à partir de leurs points communs dans les variables considérées, et les individus sont regroupés par la distance moyenne entre les individus des groupes.
 
 ```{r}
 distance_gower <- daisy(
@@ -710,14 +729,13 @@ d1_gower <- d %>%
 table(d1_gower$typo)
 ```
 
-Pour cette classification, un découpage en **k=2** classes est préférable, car les groupes sont plus fournis de cette manière.
+Pour cette classification, un découpage en **k=2** classes est préférable, car les groupes sont plus fournis de cette manière, et un découpage en k=3 classes donne une classe de 3 individus.
 
-### Méthode : EUCLIDEAN
+### 3) Méthode : EUCLIDEAN
 
-Pour cette méthode, il faut utiliser des variables quantitatives, donc les 21 variables boléennes deviennent des variables binaires (0/1) et les 3 variables catégorielles sont incluses dans leur forme initiale, c'est-à-dire numérique. Toutes les variables sont **standardisées**.
+Pour cette méthode, il faut utiliser des variables quantitatives, donc les 21 variables boléennes deviennent des variables binaires (0/1) et les 3 variables catégorielles sont incluses dans leur forme initiale, c'est-à-dire numérique. Toutes les variables sont **standardisées**, et les librairies sont regroupées selon la distance euclidienne en minimisant la variance intra-classe.
 
 ```{r}
-# Il faut utiliser des variables quantitatives, donc on reprend les variables avant catégorisation
 d_euclidean <- donnees_preparees %>%
   select(
     etiq, liseuse, gpdiscu, sitven, portasso,
@@ -788,11 +806,11 @@ d1_euclidean <- d_euclidean %>%
 table(d1_euclidean$typo)
 ```
 
-Pour cette classification, un découpage en **k=2** classes est préférable, car les groupes sont plus fournis de cette manière, et on voit un coude à ce niveau-là.
+Pour cette classification, un découpage en **k=2** classes est préférable, car un découpage en k=3 classes donne une classe de 18 individus.
 
-Déja, les trois méthodes produisent des résultats assez différents avec plutôt 2 classes, donc il faut impérativement les comparer pour retenir la meilleure classification selon l'homogénéité intra-classe et l'hétérogénéité inter-classe, ainsi que l'interprétabilité sociologique des classes.
+Les trois CAH montrent des résultats assez différents dans les effectifs, donc il faut impérativement les comparer pour retenir la meilleure classification selon une interprétation sociologique.
 
-### Tableaux des classes
+### 4) Tableaux des classes
 
 C'est pourquoi, je regarde la répartition des modalités pour chaque typologie afin d'identifier des profils clairs. Pour cela, on utilise le package **GGally** pour visualiser à l'aide du Chi2 les modalités sur (bleu) et sous-représentées (rouge) dans les classes.
 
@@ -818,8 +836,7 @@ afficher_ggtable(d1_phi2, names(d1_phi2)[12:14])
 afficher_ggtable(d1_phi2, names(d1_phi2)[15:19])
 afficher_ggtable(d1_phi2, names(d1_phi2)[20:24])
 ```
-
-On voit tout de suite que les individus ayant un chiffre daffaires supérieur à 1,2 million d'euros sont tous regroupés dans la deuxième, ce qui est le critère déterminant de la création des classes. Ces librairies sont aussi celles avec le plus de salariés et la plus grande surface commerciale. Cela n'est pas étonnant, car ce sont les trois modalités qui contribuent le plus à la formation des axes de l'ACM et que la distance choisie ici s'appuie sur cette ACM.
+La classe n°2 (N = 27) regroupe toutes les unités statistiques de la modalité chiffre d'affaires supérieur à 1,2 millions d'euros, ce qui devient le critère le plus déterminant des classes, car ce sont aussi les librairies avec le plus de salariés et la plus grande surface commerciale. Ces modalités sont aussi celles qui sont le plus éloignées du centre des axes de l'ACM, donc ce n'est pas étonnant compte tenu de la distance utilisée pour cette CAH. Pour les pratiques numériques : les unités de la classe 2 déclarent plus souvent que les autres utiliser un site de vente en ligne  et l'observatoire des librairies, tandis que celles de la classe 3 (N = 179) déclarent plus souvent ne pas utiliser ces mêmes outils. Les individus de la classe 1 (N = 62) déclarent plus souvent que les autres connaître les principaux indicateurs comptables.
 
 ```{r}
 #| message: false
@@ -831,10 +848,9 @@ afficher_ggtable(d1_gower, names(d1_gower)[12:14])
 afficher_ggtable(d1_gower, names(d1_gower)[15:19])
 afficher_ggtable(d1_gower, names(d1_gower)[20:24])
 ```
+Les deux classes sont différentes selon les variables économiques, c'est-à-dire que les grosses librairies sont surreprésentées dans la classe 1 (N = 86) sans pour autant qu'il n'y en ait aucune dans la classe 2 (N = 182). Les individus de classe 1 (N = 86) sont surreprésentés dans la connaissance des principaux indicateurs comptables, et cela vaut pour les indicateurs *mainstream* comme le chiffre d'affaires à la semaine ou plus *confidentiels* comme le besoin en fonds de roulement. Conernant les pratiques, les différences ne recoupent pas celles de la précédente classification, hormis sur l'utilisation de l'observatoire des librairies, qui est surrepresentée parmi les membres de la classe 1 (N = 86).
 
-Cette deuxième typologie distingue 2 classes, et ces classes ne sont pas uniquement formées sur les variables économiques, même si la classe 1 a une surreprésentation des unités avec un gros chiffre d'affaires et et la classe 2 une sousreprésentation de ces unités. Au niveau des pratiques quotidiennes, la classe 1 a une surreprésentation de l'usage de l'étiqueteuse, des groupes de discussion entre libraires, de l'observatoire des librairies, et au niveau des indicateurs comptables, la classe 1 connaît plus souvent : le taux de retour, le nombre de passage en caisse, le chiffre d'affaires par semaine, le taux de remise et globalement les libraires qui connaissent les indicateurs comptables sont surreprésentés dans la classe 1 et inversement pour la classe 2.
-
-Pour la dernière méthode, il faut calculer des moyennes des variables par groupe car elles sont numériques.
+Pour la dernière classification, il faut calculer des moyennes des variables par classe car elles sont numériques.
 ```{r}
 #| message: false
 #| warning: false
@@ -882,6 +898,16 @@ moyennes_euclidiennes <- d1_euclidean %>%
   )
 
 moyennes_euclidiennes %>%
+  pivot_longer(
+    cols = -typo,
+    names_to = "Variable",
+    values_to = "Moyenne"
+  ) %>%
+  pivot_wider(
+    names_from = typo,
+    values_from = Moyenne,
+    names_prefix = "Classe "
+  ) %>%
   gt() %>%
   tab_style(
     style = list(
@@ -889,19 +915,24 @@ moyennes_euclidiennes %>%
       cell_text(color = "#274E13", weight = "bold")
     ),
     locations = cells_body(
-      columns = all_of(variables_significatives)
+      columns = -Variable,
+      rows = Variable %in% variables_significatives
     )
   ) %>%
   tab_header(
     title = "Moyennes par classe – CAH euclidienne",
     subtitle = "En vert : variables présentant une différence significative entre les classes"
+  ) %>%
+  tab_options(
+    table.font.size = px(10)
   )
 ```
-Ces deux classes ne se différencient pas non plus sur les critères économiques uniquement, et il semblerait qu'on retrouve les distinctions de la CAH à l'aide de la distance de Gower, cependant, pour la distance euclidienne les différences sur l'utilisation des outils numériques sont aussi significatives. 
 
-Après analyse des trois classifications, il semblerait que la dernière soit la plue pertinente d'un point de vue sociologique, car elle crée deux classes : une première classe proche des outils numériques et connaisseuse des indicateurs comptables, et une deuxième classe, la plus large en termes d'effectifs, avec des pratiques plus diverses et homogènes. Ces deux classes se différencient également sur les critères économiques des magasins.
+Les variables en vert présentent une différence significative de distribution selon un **test ANOVA**, et seules 5 variables sur 24 ne sont pas significatives. Les deux classes se différencient selon des critères économiques de la même manière que pour la précédente classification, c'est-à-dire qu'une des classes (N = 68) a une surreprésentation des plus grosses unités. Les moyennes des variables binaires sont des proportions car les valeurs sont soit 0 soit 1, et ainsi la classe 1 (N = 68), qui regroupe les grosses librairies en termes économiques, rassemble aussi les individus qui déclarent le plus souvent utiliser les outils numériques présents et connaître les indicateurs comptables. Dans la classe 2 (N = 200), qui forme la norme en cela qu'elle regroupe le plus grand nombre de librairies, on retrouve des librairies qui utilisent des outils numériques moins fréquemment, hormis les outils de base (progiciel et reséaux sociaux) et connaissent moins fréquemment les indicateurs comptables, hormis les principaux que sont chiffre d'affaires par semaine et le taux de retour.
 
-### Projection des classes sur l'ACM
+En effet, d'un point de vue sociologique, cette dernière classification semble plus pertinente en cela qu'elle présente deux classes bien fournies et dont on peu identifier ces différences. La classe 2 (N = 200) représente la **norme professionnelle**, où on voit la tension entre métier de commerce et métier de culture, avec des des cultures d'entreprise moins portées sur l'efficacité économique par la traque des indicateurs comptables ou par la rationnalisation des pratiques, et cela est corroboré par le nombre moyen de salariés dans ces librairies : **2**. La classe 1 (N = 68) regroupe des librairies plus grosses, avec plus de salariés (5 en moyenne) et où **les cultures d'entreprise se rapprochent donc plus de l'entreprise classique**, et cela est à mettre en regard des faibles marges de manoeuvre des gérant.es de librairie pour gagner de l'argent (voir chapitre 1)
+
+### 5) Projection des classes sur l'ACM
 
 Pour affiner le choix de la CAH, on regarde la projection des classes sur l'espace des individus, pour voir visuellement selon quel axe les classes sont distribuées.
 
@@ -967,11 +998,12 @@ ggplot(individus, aes(x = Axis1, y = Axis2, color = classe_euclidean)) +
   ) +
   theme_minimal()
 ```
-La première classification (selon la méthode phi2) oppose les classes selon les deux dimensions. On voit la classe la plus fournie regroupée au centre des axes, c'est-à-dire avec des unités statistiques qui sont homogènes dans leurs pratiques. Puis les deux classes suivantes, étendent la classe 3 vers la partie en haut à droite du graphique, c'est-à-dire vers les critères économiques.
+La **première classification** trace deux lignes diagonales pour différencier les trois groupes, avec les librairies les plus grosses tout en haut à droite. Cette classification perd en différenciation selon la première dimension, celle de la connaissance des indicateurs comptables, ce qui la rend **la moins satisfaisante des trois d'un point de vue sociologique.**
 
-La deuxième classification a deux classes différentes.
+Les **deuxième et troisième classifications** sont assez proches, et la principale différence réside dans les individus statistiques situés dans la partie en bas à droite. D'un point de vue sociologique, j'ai considéré que la troisième classification était la plus pertinente. De plus, la projection de ses classes montre un nuage de points assez dense en chevauchement de la partie gauche et de la partie basse du graphique et cette dernière classification regroupe plus d'individus de ce nuage dans une même classe, laissant un groupe plus disparate à droite du graphique former une autre classe.
 
-Finalement, on retient la classification utilisant la distance euclicienne et la méthode de Ward appliquée au carré des distances.
+# III/ CONCLUSION
 
-# CONCLUSION
-Cette note méthodologique a pour but de reprendre les analyses menées en 2022/2023 lors de mon mémoire de master 1 Sociologie Quantitative et Démographie. D'un côté, j'ai corrigé des erreurs dans le traitement des données et la catégorisation, qui avaient conduit à oublier des individus pour l'ACM et la CAH. D'un autre, j'ai approfondit la classification ascendante hiérarchique réalisée, pour préciser plus sérieusement la distance utilisée et la méthode d'agrégation en comparant 3 CAH différentes pour identifier la plus appropriée statistiquement et sociologiquement. Même si les résultats n'ont pas changé drastiquement, il m'a semblé primordial de réaliser ce travail afin de porter un regard critique sur mon premier travail de recherche utilisant des méthodes quantitatives.
+Finalement, la méthode utilisée lors de l'écriture du mémoire n'est pas la bonne. Il aurait mieux fallu ne pas faire d'erreur de code pour intégrer dès le départ tous les individus, et adopter cette démarche pour les CAH afin de présenter les différentes possibilités et trancher avec des arguments sociologiques. De cette manière, **j'aurais retenu la dernière classification, utilisant la distance euclidienne et la méthode de Ward appliquée au carré des distances**, et les conclusions du mémoire en auront été d'autant plus rigoureuses.
+
+Cette note méthodologique avait pour objectif de porter un regard critique sur mon premier travail de recherche quantitative et de revenir sur certains éléments pour les préciser. Elle a un objectif personnel, c'est-à-dire m'améliorer dans ma pratique de la recherche et éviter de reproduire des erreurs déja faites, mais cette note a aussi vocation à parler à d'autres afin de donner une manière de relire ses propres travaux quelques années plus tard au-delà de l'impression de les trouver nuls et inutiles.
